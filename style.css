@@ -279,7 +279,7 @@ body{min-height:100vh}
 .preloader{z-index:3000!important;background:#05070a!important}
 .preloader .loader-logo{animation:logoBounce 1.15s cubic-bezier(.2,.75,.25,1) infinite alternate!important;background:transparent!important;box-shadow:0 0 14px rgba(255,208,92,.55),0 0 38px rgba(255,208,92,.25)!important;border:2px solid var(--gold2)}
 .preloader .loader-logo img{filter:drop-shadow(0 0 8px rgba(255,215,100,.85))}
-.preloader>b{font-family:"DM Sans",sans-serif!important;font-size:28px!important;letter-spacing:4px;text-transform:uppercase;color:#fff!important;text-shadow:0 0 6px #fff,0 0 14px #ffd35a,0 0 30px rgba(255,190,50,.9),0 0 52px rgba(255,130,20,.65)!important}
+.preloader>b{font-family:"DM Sans",sans-serif!important;font-size:20px!important;letter-spacing:4px;text-transform:uppercase;color:#fff!important;text-shadow:0 0 6px #fff,0 0 14px #ffd35a,0 0 30px rgba(255,190,50,.9),0 0 52px rgba(255,130,20,.65)!important}
 .preloader>small{color:#e9d7a9!important;letter-spacing:1px}
 @keyframes logoBounce{0%{transform:translateY(8px) scale(.92) rotate(-2deg)}55%{transform:translateY(-25px) scale(1.04) rotate(1deg)}100%{transform:translateY(0) scale(1) rotate(0)}}
 
