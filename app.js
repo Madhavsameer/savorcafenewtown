@@ -1,312 +1,1558 @@
 const CATEGORY_LABELS = {
-  starters:"Starters (6 pcs)", tandoor:"Tandoor (6 pcs)", noodles:"Noodles", chinese:"Chinese",
-  soup:"Soups", seafood:"Seafood", salad:"Salads & Drinks", combo:"Indian Combos",
-  veg:"Vegetarian Mains", roti:"Tawa Roti & Breads", biryani:"Biryani & Khichuri", rice:"Rice & Mains"
+  starters:"Starters (6 pcs)",
+  tandoor:"Tandoor (6 pcs)",
+  noodles:"Noodles",
+  chinese:"Chinese",
+  soup:"Soups",
+  seafood:"Seafood",
+  salad:"Salads & Drinks",
+  combo:"Indian Combos",
+  veg:"Vegetarian Mains",
+  roti:"Tawa Roti & Breads",
+  biryani:"Biryani & Khichuri",
+  rice:"Rice & Mains"
 };
+
 const CATEGORY_ICONS = {
-  starters:"🍢", tandoor:"🔥", noodles:"🍜", chinese:"🥢", soup:"🥣", seafood:"🐟",
-  salad:"🥗", combo:"🍛", veg:"🥦", roti:"🫓", biryani:"🍚", rice:"🍚"
+  starters:"🍢",
+  tandoor:"🔥",
+  noodles:"🍜",
+  chinese:"🥢",
+  soup:"🥣",
+  seafood:"🐟",
+  salad:"🥗",
+  combo:"🍛",
+  veg:"🥦",
+  roti:"🫓",
+  biryani:"🍚",
+  rice:"🍚"
 };
-const CATEGORY_ORDER = ["starters","tandoor","noodles","chinese","soup","seafood","veg","combo","biryani","rice","roti","salad"];
-const NONVEG_WORDS = ["chicken","mutton","fish","egg","katla","rui","prawn","meat"];
+
+const CATEGORY_ORDER = [
+  "starters",
+  "tandoor",
+  "noodles",
+  "chinese",
+  "soup",
+  "seafood",
+  "veg",
+  "combo",
+  "biryani",
+  "rice",
+  "roti",
+  "salad"
+];
+
+const NONVEG_WORDS = [
+  "chicken",
+  "mutton",
+  "fish",
+  "egg",
+  "katla",
+  "rui",
+  "prawn",
+  "meat"
+];
 
 (function(){
-  const P = window.MENU_PRODUCTS;
-  const isVeg = p => !NONVEG_WORDS.some(w => p.name.toLowerCase().includes(w));
-  P.forEach(p => p.veg = isVeg(p));
+
+  const P = window.MENU_PRODUCTS || [];
+
+  const $ = selector => document.querySelector(selector);
+
+  /* =====================================================
+     PRODUCT CLASSIFICATION
+     ===================================================== */
+
+  const isVeg = product =>
+    !NONVEG_WORDS.some(word =>
+      product.name.toLowerCase().includes(word)
+    );
+
+  P.forEach(product => {
+    product.veg = isVeg(product);
+  });
+
+  /* =====================================================
+     CART
+     ===================================================== */
 
   const cart = {};
-  const $ = sel => document.querySelector(sel);
 
-  // ---- preloader: one short, guaranteed branded moment — never depends on slow network/font loads ----
+  /* =====================================================
+     PRELOADER
+     ===================================================== */
+
   requestAnimationFrame(() => {
-    setTimeout(() => $('#preloader')?.classList.add('hide'), 650);
+    setTimeout(() => {
+      $("#preloader")?.classList.add("hide");
+    }, 650);
   });
 
-  // ---- keep sticky offsets correct on notched phones (the navbar grows taller there) ----
-  function setNavHeight(){
-    const nb = document.querySelector('.navbar');
-    if (nb) document.documentElement.style.setProperty('--navh', nb.getBoundingClientRect().height + 'px');
-  }
-  setNavHeight();
-  window.addEventListener('resize', setNavHeight);
-  window.addEventListener('orientationchange', () => setTimeout(setNavHeight, 250));
+  /* =====================================================
+     NAVBAR HEIGHT
+     ===================================================== */
 
-  // ---- status pill ----
-  function updateStatus(){
-    const h = new Date().getHours();
-    const open = h >= 11 && h < 23;
-    $('#statusDot').classList.toggle('closed', !open);
-    $('#statusText').textContent = open ? 'Open now' : 'Closed — opens 11:00 AM';
+  function setNavHeight(){
+
+    const navbar = document.querySelector(".navbar");
+
+    if(!navbar) return;
+
+    document.documentElement.style.setProperty(
+      "--navh",
+      `${navbar.getBoundingClientRect().height}px`
+    );
   }
+
+  setNavHeight();
+
+  window.addEventListener("resize", setNavHeight);
+
+  window.addEventListener(
+    "orientationchange",
+    () => setTimeout(setNavHeight, 250)
+  );
+
+  /* =====================================================
+     RESTAURANT STATUS
+     ===================================================== */
+
+  function updateStatus(){
+
+    const dot = $("#statusDot");
+    const text = $("#statusText");
+
+    if(!dot || !text) return;
+
+    const hour = new Date().getHours();
+
+    const open = hour >= 11 && hour < 23;
+
+    dot.classList.toggle("closed", !open);
+
+    text.textContent = open
+      ? "Open now"
+      : "Closed — opens 11:00 AM";
+  }
+
   updateStatus();
 
-  // ---- mobile nav toggle (defined before routing, since goTo() calls closeNav on first load) ----
-  const navLinks = $('#navLinks'), navScrim = $('#navScrim'), navToggle = $('#navToggle');
-  function closeNav(){ navLinks.classList.remove('open'); navScrim.classList.remove('show'); navToggle.setAttribute('aria-expanded','false'); navToggle.textContent='☰'; }
-  function openNav(){ navLinks.classList.add('open'); navScrim.classList.add('show'); navToggle.setAttribute('aria-expanded','true'); navToggle.textContent='✕'; setNavHeight(); }
-  navToggle.onclick = () => { navLinks.classList.contains('open') ? closeNav() : openNav(); };
-  navScrim.onclick = closeNav;
+  setInterval(updateStatus, 60000);
 
-  // ---- routing ----
-  const pages = [...document.querySelectorAll('.page')];
+  /* =====================================================
+     MOBILE NAVIGATION
+     ===================================================== */
+
+  const navLinks = $("#navLinks");
+  const navScrim = $("#navScrim");
+  const navToggle = $("#navToggle");
+
+  function closeNav(){
+
+    navLinks?.classList.remove("open");
+    navScrim?.classList.remove("show");
+
+    navToggle?.setAttribute(
+      "aria-expanded",
+      "false"
+    );
+
+    navToggle?.setAttribute(
+      "aria-label",
+      "Open menu"
+    );
+
+    if(navToggle){
+      navToggle.textContent = "☰";
+    }
+
+    document.body.classList.remove("nav-open");
+
+    setNavHeight();
+  }
+
+  function openNav(){
+
+    navLinks?.classList.add("open");
+    navScrim?.classList.add("show");
+
+    navToggle?.setAttribute(
+      "aria-expanded",
+      "true"
+    );
+
+    navToggle?.setAttribute(
+      "aria-label",
+      "Close menu"
+    );
+
+    if(navToggle){
+      navToggle.textContent = "✕";
+    }
+
+    document.body.classList.add("nav-open");
+
+    setNavHeight();
+  }
+
+  navToggle?.addEventListener("click", () => {
+
+    if(navLinks?.classList.contains("open")){
+      closeNav();
+    }else{
+      openNav();
+    }
+
+  });
+
+  navScrim?.addEventListener("click", closeNav);
+
+  /* =====================================================
+     ROUTING
+     ===================================================== */
+
+  const pages = [
+    ...document.querySelectorAll(".page")
+  ];
+
+  const VALID_PAGES = [
+    "home",
+    "menu",
+    "about",
+    "contact"
+  ];
+
   function goTo(name){
-    pages.forEach(p => p.classList.toggle('active', p.dataset.page === name));
-    document.querySelectorAll('[data-nav]').forEach(a => {
-      if (a.closest('.nav-links')) a.classList.toggle('active', a.dataset.nav === name);
+
+    if(!VALID_PAGES.includes(name)){
+      name = "home";
+    }
+
+    pages.forEach(page => {
+
+      page.classList.toggle(
+        "active",
+        page.dataset.page === name
+      );
+
     });
+
+    document
+      .querySelectorAll("[data-nav]")
+      .forEach(link => {
+
+        if(link.closest(".nav-links")){
+
+          link.classList.toggle(
+            "active",
+            link.dataset.nav === name
+          );
+
+        }
+
+      });
+
     closeNav();
-    window.scrollTo(0,0);
-    setTimeout(setNavHeight, 50);
-    if (location.hash.slice(1) !== name) history.replaceState(null,'','#'+name);
-  }
-  document.querySelectorAll('[data-nav]').forEach(a => a.addEventListener('click', e => {
-    e.preventDefault();
-    goTo(a.dataset.nav);
-  }));
-  window.addEventListener('hashchange', () => {
-    const n = location.hash.slice(1) || 'home';
-    if (['home','menu','about','contact'].includes(n)) goTo(n);
-  });
-  goTo(location.hash.slice(1) || 'home');
 
-  // ---- home category cards ----
-  const present = CATEGORY_ORDER.filter(c => P.some(p => p.category === c));
-  const homeCats = $('#homeCats');
-  present.forEach(c => {
-    const card = document.createElement('button');
-    card.className = 'cat-card';
-    card.innerHTML = `<span class="ic">${CATEGORY_ICONS[c]||'🍴'}</span><h4>${CATEGORY_LABELS[c]}</h4><span>${P.filter(p=>p.category===c).length} dishes</span>`;
-    card.onclick = () => { goTo('menu'); setTimeout(() => document.getElementById('s-'+c)?.scrollIntoView({behavior:'smooth'}), 60); };
-    homeCats.appendChild(card);
-  });
+    window.scrollTo({
+      top:0,
+      behavior:"instant"
+    });
 
-  // ---- categories row (menu page) ----
-  const catsEl = $('#cats'), menuEl = $('#menu'), searchEl = $('#search');
-  present.forEach(c => {
-    const btn = document.createElement('button');
-    btn.className = 'cat';
-    btn.textContent = CATEGORY_LABELS[c] || c;
-    btn.dataset.cat = c;
-    btn.onclick = () => document.getElementById('s-'+c).scrollIntoView({behavior:'smooth', block:'start'});
-    catsEl.appendChild(btn);
-  });
+    setTimeout(setNavHeight,50);
 
-  const currentIndexByName = {};
-  P.forEach(p => currentIndexByName[p.name.toLowerCase()] = p);
+    if(location.hash.slice(1) !== name){
 
-  function itemCard(p){
-    const e = document.createElement('div');
-    e.className = 'item';
-    e.dataset.name = p.name.toLowerCase();
-    e.innerHTML = `
-      <div class="item-info">
-        <span class="dot ${p.veg?'veg':'nonveg'}" title="${p.veg?'Veg':'Non-veg'}"></span>
-        <div><div class="item-name">${p.name}</div><div class="item-price">₹${p.price}</div></div>
-      </div>
-      <div class="qty-slot"></div>`;
-    renderQtySlot(e.querySelector('.qty-slot'), p);
-    return e;
-  }
-  function renderQtySlot(slot, p){
-    const q = cart[p.id] || 0;
-    if (!q){
-      slot.innerHTML = `<button class="add-btn">Add</button>`;
-      slot.querySelector('.add-btn').onclick = () => addToCart(p);
-    } else {
-      slot.innerHTML = `<div class="stepper"><button data-d="-1" aria-label="Remove one">−</button><span class="n">${q}</span><button data-d="1" aria-label="Add one">+</button></div>`;
-      slot.querySelectorAll('button').forEach(b => b.onclick = () => changeQty(p, parseInt(b.dataset.d)));
+      history.replaceState(
+        null,
+        "",
+        "#" + name
+      );
+
     }
   }
-  function rebuildSlot(el){ if(!el) return; const p = currentIndexByName[el.dataset.name]; if (p) renderQtySlot(el.querySelector('.qty-slot'), p); }
-  function findEl(name){ return document.querySelector(`.item[data-name="${CSS.escape(name.toLowerCase())}"]`); }
-  // A dish can appear in more than one place (home preview + full menu) — keep every copy in sync.
-  function rebuildAllCopies(name){
-    document.querySelectorAll(`.item[data-name="${CSS.escape(name.toLowerCase())}"]`).forEach(rebuildSlot);
-  }
 
-  // ---- home "Popular Dishes" preview ----
-  const POPULAR_IDS = [30,86,24,43,20,52,88,41,84,44];
-  const popularWrap = $('#homePopular');
-  if (popularWrap){
-    const grid = document.createElement('div');
-    grid.className = 'grid';
-    POPULAR_IDS.forEach(id => { const p = P.find(x => x.id === id); if (p) grid.appendChild(itemCard(p)); });
-    popularWrap.appendChild(grid);
-  }
+  document
+    .querySelectorAll("[data-nav]")
+    .forEach(link => {
 
-  present.forEach(c => {
-    const section = document.createElement('section');
-    section.className = 'section';
-    section.id = 's-' + c;
-    const items = P.filter(p => p.category === c);
-    section.innerHTML = `<h3>${CATEGORY_LABELS[c]||c} <small>${items.length} dishes</small></h3>`;
-    const grid = document.createElement('div');
-    grid.className = 'grid';
-    items.forEach(p => grid.appendChild(itemCard(p)));
-    section.appendChild(grid);
-    menuEl.appendChild(section);
+      link.addEventListener("click", event => {
+
+        event.preventDefault();
+
+        goTo(link.dataset.nav);
+
+      });
+
+    });
+
+  window.addEventListener("hashchange", () => {
+
+    const page =
+      location.hash.slice(1) || "home";
+
+    goTo(page);
+
   });
 
-  function addToCart(p){
-    cart[p.id] = (cart[p.id]||0) + 1;
-    renderCart();
-    showToast(p.name + ' added');
-    rebuildAllCopies(p.name);
+  goTo(
+    location.hash.slice(1) || "home"
+  );
+
+  /* =====================================================
+     CATEGORIES
+     ===================================================== */
+
+  const presentCategories =
+    CATEGORY_ORDER.filter(category =>
+      P.some(product =>
+        product.category === category
+      )
+    );
+
+  /* =====================================================
+     HOME CATEGORY CARDS
+     ===================================================== */
+
+  const homeCats = $("#homeCats");
+
+  if(homeCats){
+
+    presentCategories.forEach(category => {
+
+      const card =
+        document.createElement("button");
+
+      card.type = "button";
+
+      card.className = "cat-card";
+
+      const count =
+        P.filter(
+          product =>
+            product.category === category
+        ).length;
+
+      card.innerHTML = `
+        <span class="ic">
+          ${CATEGORY_ICONS[category] || "🍴"}
+        </span>
+
+        <h4>
+          ${CATEGORY_LABELS[category]}
+        </h4>
+
+        <span>
+          ${count} dishes
+        </span>
+      `;
+
+      card.addEventListener("click", () => {
+
+        goTo("menu");
+
+        setTimeout(() => {
+
+          document
+            .getElementById("s-" + category)
+            ?.scrollIntoView({
+              behavior:"smooth",
+              block:"start"
+            });
+
+        },80);
+
+      });
+
+      homeCats.appendChild(card);
+
+    });
+
   }
-  function changeQty(p, d){
-    cart[p.id] = (cart[p.id]||0) + d;
-    if (cart[p.id] <= 0) delete cart[p.id];
-    renderCart();
-    rebuildAllCopies(p.name);
+
+  /* =====================================================
+     MENU ELEMENTS
+     ===================================================== */
+
+  const catsEl = $("#cats");
+  const menuEl = $("#menu");
+  const searchEl = $("#search");
+
+  /* =====================================================
+     MENU CATEGORY BUTTONS
+     ===================================================== */
+
+  if(catsEl){
+
+    presentCategories.forEach(category => {
+
+      const button =
+        document.createElement("button");
+
+      button.type = "button";
+
+      button.className = "cat";
+
+      button.textContent =
+        CATEGORY_LABELS[category] || category;
+
+      button.dataset.cat = category;
+
+      button.addEventListener("click", () => {
+
+        document
+          .getElementById("s-" + category)
+          ?.scrollIntoView({
+            behavior:"smooth",
+            block:"start"
+          });
+
+      });
+
+      catsEl.appendChild(button);
+
+    });
+
   }
+
+  /* =====================================================
+     PRODUCT LOOKUP
+     ===================================================== */
+
+  const productByName = {};
+
+  P.forEach(product => {
+
+    productByName[
+      product.name.toLowerCase()
+    ] = product;
+
+  });
+
+  /* =====================================================
+     PRODUCT CARD
+     ===================================================== */
+
+  function itemCard(product){
+
+    const element =
+      document.createElement("div");
+
+    element.className = "item";
+
+    element.dataset.name =
+      product.name.toLowerCase();
+
+    element.innerHTML = `
+      <div class="item-info">
+
+        <span
+          class="dot ${product.veg ? "veg" : "nonveg"}"
+          title="${product.veg ? "Veg" : "Non-veg"}"
+          aria-label="${product.veg ? "Vegetarian" : "Non vegetarian"}"
+        ></span>
+
+        <div>
+          <div class="item-name">
+            ${product.name}
+          </div>
+
+          <div class="item-price">
+            ₹${product.price}
+          </div>
+        </div>
+
+      </div>
+
+      <div class="qty-slot"></div>
+    `;
+
+    renderQtySlot(
+      element.querySelector(".qty-slot"),
+      product
+    );
+
+    return element;
+  }
+
+  /* =====================================================
+     QUANTITY CONTROL
+     ===================================================== */
+
+  function renderQtySlot(slot, product){
+
+    if(!slot) return;
+
+    const quantity =
+      cart[product.id] || 0;
+
+    if(!quantity){
+
+      slot.innerHTML = `
+        <button
+          type="button"
+          class="add-btn"
+          aria-label="Add ${product.name}"
+        >
+          Add
+        </button>
+      `;
+
+      slot
+        .querySelector(".add-btn")
+        .addEventListener(
+          "click",
+          () => addToCart(product)
+        );
+
+      return;
+    }
+
+    slot.innerHTML = `
+      <div class="stepper">
+
+        <button
+          type="button"
+          data-d="-1"
+          aria-label="Remove one ${product.name}"
+        >
+          −
+        </button>
+
+        <span class="n">
+          ${quantity}
+        </span>
+
+        <button
+          type="button"
+          data-d="1"
+          aria-label="Add one ${product.name}"
+        >
+          +
+        </button>
+
+      </div>
+    `;
+
+    slot
+      .querySelectorAll(".stepper button")
+      .forEach(button => {
+
+        button.addEventListener(
+          "click",
+          () =>
+            changeQty(
+              product,
+              Number(button.dataset.d)
+            )
+        );
+
+      });
+
+  }
+
+  function rebuildAllCopies(name){
+
+    const selector =
+      `.item[data-name="${CSS.escape(
+        name.toLowerCase()
+      )}"]`;
+
+    document
+      .querySelectorAll(selector)
+      .forEach(element => {
+
+        const product =
+          productByName[
+            element.dataset.name
+          ];
+
+        if(product){
+
+          renderQtySlot(
+            element.querySelector(".qty-slot"),
+            product
+          );
+
+        }
+
+      });
+
+  }
+
+  /* =====================================================
+     POPULAR DISHES
+     ===================================================== */
+
+  const POPULAR_IDS = [
+    30,
+    86,
+    24,
+    43,
+    20,
+    52,
+    88,
+    41,
+    84,
+    44
+  ];
+
+  const popularWrap =
+    $("#homePopular");
+
+  if(popularWrap){
+
+    const grid =
+      document.createElement("div");
+
+    grid.className = "grid";
+
+    POPULAR_IDS.forEach(id => {
+
+      const product =
+        P.find(item => item.id === id);
+
+      if(product){
+
+        grid.appendChild(
+          itemCard(product)
+        );
+
+      }
+
+    });
+
+    popularWrap.appendChild(grid);
+
+  }
+
+  /* =====================================================
+     FULL MENU
+     ===================================================== */
+
+  if(menuEl){
+
+    presentCategories.forEach(category => {
+
+      const section =
+        document.createElement("section");
+
+      section.className = "section";
+
+      section.id =
+        "s-" + category;
+
+      const items =
+        P.filter(
+          product =>
+            product.category === category
+        );
+
+      section.innerHTML = `
+        <h3>
+          ${CATEGORY_LABELS[category] || category}
+          <small>
+            ${items.length} dishes
+          </small>
+        </h3>
+      `;
+
+      const grid =
+        document.createElement("div");
+
+      grid.className = "grid";
+
+      items.forEach(product => {
+
+        grid.appendChild(
+          itemCard(product)
+        );
+
+      });
+
+      section.appendChild(grid);
+
+      menuEl.appendChild(section);
+
+    });
+
+  }
+
+  /* =====================================================
+     ADD TO CART
+     ===================================================== */
+
+  function addToCart(product){
+
+    cart[product.id] =
+      (cart[product.id] || 0) + 1;
+
+    renderCart();
+
+    rebuildAllCopies(product.name);
+
+    showToast(
+      product.name + " added"
+    );
+
+  }
+
+  /* =====================================================
+     CHANGE QUANTITY
+     ===================================================== */
+
+  function changeQty(product, difference){
+
+    cart[product.id] =
+      (cart[product.id] || 0) + difference;
+
+    if(cart[product.id] <= 0){
+
+      delete cart[product.id];
+
+    }
+
+    renderCart();
+
+    rebuildAllCopies(product.name);
+
+  }
+
+  /* =====================================================
+     RENDER CART
+     ===================================================== */
 
   function renderCart(){
-    const box = $('#cartItems');
-    const entries = Object.entries(cart);
-    let total = 0, count = 0;
-    if (!entries.length){
-      box.innerHTML = `<div class="cart-empty">Your cart is empty.<br>Add a few dishes to get started.</div>`;
-    } else {
-      box.innerHTML = '';
-      entries.forEach(([id, qty]) => {
-        const p = P.find(x => x.id == id);
-        if (!p) return;
-        total += p.price * qty; count += qty;
-        const line = document.createElement('div');
-        line.className = 'line';
-        line.innerHTML = `
-          <div><div class="li-name">${p.name}</div><div class="li-price">₹${p.price} × ${qty} = ₹${p.price*qty}</div><button class="remove">Remove</button></div>
-          <div class="stepper"><button data-d="-1" aria-label="Remove one">−</button><span class="n">${qty}</span><button data-d="1" aria-label="Add one">+</button></div>`;
-        line.querySelector('.remove').onclick = () => { delete cart[p.id]; renderCart(); rebuildAllCopies(p.name); };
-        line.querySelectorAll('.stepper button').forEach(b => b.onclick = () => changeQty(p, parseInt(b.dataset.d)));
-        box.appendChild(line);
-      });
-    }
-    $('#total').textContent = '₹' + total;
-    const countEl = $('#count');
-    if (countEl.textContent != count) { countEl.textContent = count; countEl.classList.remove('bump'); void countEl.offsetWidth; countEl.classList.add('bump'); }
-    $('#checkout').disabled = !count;
 
-    // ---- View Cart bar: appears the moment there's at least one item ----
-    const bar = $('#viewCartBar'), fabGroup = $('#fabGroup');
-    if (count){
-      $('#vcbCount').textContent = count;
-      $('#vcbTotal').textContent = '₹' + total;
-      bar.classList.add('show');
-      fabGroup.classList.add('lift');
-    } else {
-      bar.classList.remove('show');
-      fabGroup.classList.remove('lift');
+    const box = $("#cartItems");
+
+    if(!box) return;
+
+    const entries =
+      Object.entries(cart);
+
+    let total = 0;
+    let count = 0;
+
+    if(!entries.length){
+
+      box.innerHTML = `
+        <div class="cart-empty">
+          Your cart is empty.<br>
+          Add a few dishes to get started.
+        </div>
+      `;
+
+    }else{
+
+      box.innerHTML = "";
+
+      entries.forEach(
+        ([id, quantity]) => {
+
+          const product =
+            P.find(item => item.id == id);
+
+          if(!product) return;
+
+          total +=
+            product.price * quantity;
+
+          count += quantity;
+
+          const line =
+            document.createElement("div");
+
+          line.className = "line";
+
+          line.innerHTML = `
+            <div>
+
+              <div class="li-name">
+                ${product.name}
+              </div>
+
+              <div class="li-price">
+                ₹${product.price}
+                × ${quantity}
+                = ₹${product.price * quantity}
+              </div>
+
+              <button
+                type="button"
+                class="remove"
+              >
+                Remove
+              </button>
+
+            </div>
+
+            <div class="stepper">
+
+              <button
+                type="button"
+                data-d="-1"
+                aria-label="Remove one"
+              >
+                −
+              </button>
+
+              <span class="n">
+                ${quantity}
+              </span>
+
+              <button
+                type="button"
+                data-d="1"
+                aria-label="Add one"
+              >
+                +
+              </button>
+
+            </div>
+          `;
+
+          line
+            .querySelector(".remove")
+            .addEventListener(
+              "click",
+              () => {
+
+                delete cart[product.id];
+
+                renderCart();
+
+                rebuildAllCopies(
+                  product.name
+                );
+
+              }
+            );
+
+          line
+            .querySelectorAll(
+              ".stepper button"
+            )
+            .forEach(button => {
+
+              button.addEventListener(
+                "click",
+                () =>
+                  changeQty(
+                    product,
+                    Number(button.dataset.d)
+                  )
+              );
+
+            });
+
+          box.appendChild(line);
+
+        }
+      );
+
     }
+
+    $("#total").textContent =
+      "₹" + total;
+
+    const countElement =
+      $("#count");
+
+    if(
+      countElement &&
+      Number(countElement.textContent) !== count
+    ){
+
+      countElement.textContent =
+        count;
+
+      countElement.classList.remove(
+        "bump"
+      );
+
+      void countElement.offsetWidth;
+
+      countElement.classList.add(
+        "bump"
+      );
+
+    }
+
+    $("#checkout").disabled =
+      count === 0;
+
+    /* Sticky mobile cart */
+
+    const cartBar =
+      $("#viewCartBar");
+
+    const fabGroup =
+      $("#fabGroup");
+
+    if(count > 0){
+
+      $("#vcbCount").textContent =
+        count;
+
+      $("#vcbTotal").textContent =
+        "₹" + total;
+
+      cartBar?.classList.add("show");
+
+      fabGroup?.classList.add("lift");
+
+    }else{
+
+      cartBar?.classList.remove("show");
+
+      fabGroup?.classList.remove("lift");
+
+    }
+
   }
+
+  /* =====================================================
+     TOAST
+     ===================================================== */
 
   let toastTimer;
-  function showToast(msg){
-    const t = $('#toast');
-    t.textContent = msg; t.classList.add('show');
+
+  function showToast(message){
+
+    const toast = $("#toast");
+
+    if(!toast) return;
+
+    toast.textContent =
+      message;
+
+    toast.classList.add("show");
+
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
+
+    toastTimer =
+      setTimeout(
+        () =>
+          toast.classList.remove("show"),
+        1800
+      );
+
   }
 
-  searchEl.addEventListener('input', () => {
-    const q = searchEl.value.trim().toLowerCase();
-    $('#searchClear').classList.toggle('show', !!q);
-    let anyVisible = false;
-    document.querySelectorAll('.section').forEach(section => {
-      let has = false;
-      section.querySelectorAll('.item').forEach(el => {
-        const match = !q || el.dataset.name.includes(q);
-        el.style.display = match ? '' : 'none';
-        if (match) has = true;
-      });
-      section.style.display = has ? '' : 'none';
-      if (has) anyVisible = true;
-    });
-    $('#emptyState').style.display = anyVisible || !q ? 'none' : 'block';
-    $('#emptyQuery').textContent = searchEl.value.trim();
-    catsEl.style.display = q ? 'none' : 'flex';
-  });
-  $('#searchClear').onclick = () => { searchEl.value=''; searchEl.dispatchEvent(new Event('input')); searchEl.focus(); };
+  /* =====================================================
+     SEARCH
+     ===================================================== */
 
-  const catButtons = [...catsEl.querySelectorAll('.cat')];
-  const sections = present.map(c => document.getElementById('s-'+c));
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(en => { if (en.isIntersecting){ const id = en.target.id.replace('s-',''); catButtons.forEach(b => b.classList.toggle('active', b.dataset.cat === id)); } });
-  }, {rootMargin:'-160px 0px -70% 0px'});
-  sections.forEach(s => io.observe(s));
+  if(searchEl){
 
-  const cartEl = $('#cart'), scrim = $('#scrim');
-  function openCart(){ cartEl.classList.add('open'); scrim.classList.add('show'); }
-  function closeCartFn(){ cartEl.classList.remove('open'); scrim.classList.remove('show'); }
-  $('#cartBtn').onclick = openCart;
-  $('#vcbBtn').onclick = openCart;
-  $('#closeCart').onclick = closeCartFn;
-  scrim.onclick = () => { closeCartFn(); $('#checkoutModal').close(); };
+    searchEl.addEventListener(
+      "input",
+      () => {
 
-  const modal = $('#checkoutModal');
-  let orderMode = 'delivery';
-  $('#orderToggle').addEventListener('click', e => {
-    const b = e.target.closest('button'); if(!b) return;
-    orderMode = b.dataset.mode;
-    [...$('#orderToggle').children].forEach(x => x.classList.toggle('active', x===b));
-    const addrField = $('#addressField'), addrInput = $('#addressInput');
-    if (orderMode === 'delivery'){ addrField.classList.remove('field-hidden'); addrInput.required = true; }
-    else { addrField.classList.add('field-hidden'); addrInput.required = false; }
-  });
-  $('#checkout').onclick = () => { if (Object.keys(cart).length){ scrim.classList.add('show'); modal.showModal(); } };
-  $('#closeModal').onclick = () => { modal.close(); scrim.classList.remove('show'); };
-  modal.addEventListener('close', () => scrim.classList.remove('show'));
+        const query =
+          searchEl.value
+            .trim()
+            .toLowerCase();
 
-  $('#gps').onclick = () => {
-    if (!navigator.geolocation){ $('#gpsmsg').textContent = 'Location is not supported by this browser.'; return; }
-    $('#gpsmsg').textContent = 'Getting your location…';
-    navigator.geolocation.getCurrentPosition(
-      pos => { $('#lat').value = pos.coords.latitude; $('#lng').value = pos.coords.longitude; $('#gpsmsg').textContent = '✓ Location captured successfully.'; },
-      () => { $('#gpsmsg').textContent = 'Location permission denied — you can enter the address manually.'; },
-      {enableHighAccuracy:true, timeout:10000, maximumAge:0}
+        $("#searchClear")
+          ?.classList
+          .toggle(
+            "show",
+            Boolean(query)
+          );
+
+        let anythingVisible =
+          false;
+
+        document
+          .querySelectorAll(".section")
+          .forEach(section => {
+
+            let sectionHasMatch =
+              false;
+
+            section
+              .querySelectorAll(".item")
+              .forEach(item => {
+
+                const match =
+                  !query ||
+                  item.dataset.name
+                    .includes(query);
+
+                item.style.display =
+                  match ? "" : "none";
+
+                if(match){
+                  sectionHasMatch = true;
+                }
+
+              });
+
+            section.style.display =
+              sectionHasMatch
+                ? ""
+                : "none";
+
+            if(sectionHasMatch){
+              anythingVisible = true;
+            }
+
+          });
+
+        $("#emptyState").style.display =
+          anythingVisible || !query
+            ? "none"
+            : "block";
+
+        $("#emptyQuery").textContent =
+          searchEl.value.trim();
+
+        if(catsEl){
+
+          catsEl.style.display =
+            query ? "none" : "flex";
+
+        }
+
+      }
     );
-  };
 
-  $('#form').addEventListener('submit', e => {
-    e.preventDefault();
-    const f = new FormData(e.target);
-    const items = Object.entries(cart).map(([id,qty]) => ({...P.find(x=>x.id==id), qty}));
-    const total = items.reduce((s,x)=>s+x.price*x.qty,0);
-    const orderNo = 'SC' + Date.now().toString().slice(-7);
-    const lat = f.get('lat'), lng = f.get('lng');
-    let locationText = 'Not shared';
-    if (lat && lng) locationText = `https://www.google.com/maps?q=${encodeURIComponent(lat+','+lng)}`;
-    const modeLabel = {delivery:'Home Delivery', takeaway:'Takeaway', dinein:'Dine-in'}[orderMode];
+    $("#searchClear")?.addEventListener(
+      "click",
+      () => {
 
-    let message = `🍽️ *NEW ORDER — SAVOR CAFE'*\n\n`;
-    message += `*Order:* ${orderNo}\n*Type:* ${modeLabel}\n*Customer:* ${f.get('name')}\n*Phone:* ${f.get('phone')}\n`;
-    if (orderMode === 'delivery'){ message += `*Address:* ${f.get('address')}\n*Live Location:* ${locationText}\n`; }
-    message += `\n*ITEMS*\n`;
-    items.forEach(x => { message += `• ${x.name} × ${x.qty} — ₹${x.price*x.qty}\n`; });
-    message += `\n*TOTAL: ₹${total}*\n`;
-    if (f.get('notes')) message += `\n*Note:* ${f.get('notes')}\n`;
-    message += `\nPlease confirm the order.`;
+        searchEl.value = "";
 
-    const waUrl = `https://wa.me/918981315889?text=${encodeURIComponent(message)}`;
-    Object.keys(cart).forEach(k => delete cart[k]);
-    renderCart();
-    items.forEach(it => rebuildAllCopies(it.name));
-    modal.close(); closeCartFn();
-    e.target.reset(); $('#gpsmsg').textContent = '';
-    window.open(waUrl, '_blank');
-  });
+        searchEl.dispatchEvent(
+          new Event("input")
+        );
 
-  // ---- contact form -> whatsapp ----
-  $('#contactForm').addEventListener('submit', e => {
-    e.preventDefault();
-    const f = new FormData(e.target);
-    let msg = `📩 *Message from website*\n\n*Name:* ${f.get('cname')}\n`;
-    if (f.get('cphone')) msg += `*Phone:* ${f.get('cphone')}\n`;
-    msg += `\n${f.get('cmsg')}`;
-    window.open(`https://wa.me/918981315889?text=${encodeURIComponent(msg)}`, '_blank');
-    e.target.reset();
-  });
+        searchEl.focus();
+
+      }
+    );
+
+  }
+
+  /* =====================================================
+     CATEGORY SCROLL OBSERVER
+     ===================================================== */
+
+  const categoryButtons =
+    catsEl
+      ? [...catsEl.querySelectorAll(".cat")]
+      : [];
+
+  const sections =
+    presentCategories
+      .map(category =>
+        document.getElementById(
+          "s-" + category
+        )
+      )
+      .filter(Boolean);
+
+  if(
+    "IntersectionObserver"
+    in window
+  ){
+
+    const observer =
+      new IntersectionObserver(
+        entries => {
+
+          entries.forEach(entry => {
+
+            if(!entry.isIntersecting)
+              return;
+
+            const id =
+              entry.target.id
+                .replace("s-","");
+
+            categoryButtons.forEach(
+              button => {
+
+                button.classList.toggle(
+                  "active",
+                  button.dataset.cat === id
+                );
+
+              }
+            );
+
+          });
+
+        },
+        {
+          rootMargin:
+            "-150px 0px -70% 0px"
+        }
+      );
+
+    sections.forEach(
+      section =>
+        observer.observe(section)
+    );
+
+  }
+
+  /* =====================================================
+     CART DRAWER
+     ===================================================== */
+
+  const cartElement =
+    $("#cart");
+
+  const scrim =
+    $("#scrim");
+
+  function openCart(){
+
+    cartElement?.classList.add(
+      "open"
+    );
+
+    scrim?.classList.add(
+      "show"
+    );
+
+    document.body.classList.add(
+      "cart-open"
+    );
+
+  }
+
+  function closeCart(){
+
+    cartElement?.classList.remove(
+      "open"
+    );
+
+    scrim?.classList.remove(
+      "show"
+    );
+
+    document.body.classList.remove(
+      "cart-open"
+    );
+
+  }
+
+  $("#cartBtn")
+    ?.addEventListener(
+      "click",
+      openCart
+    );
+
+  $("#vcbBtn")
+    ?.addEventListener(
+      "click",
+      openCart
+    );
+
+  $("#closeCart")
+    ?.addEventListener(
+      "click",
+      closeCart
+    );
+
+  scrim?.addEventListener(
+    "click",
+    () => {
+
+      closeCart();
+
+      const modal =
+        $("#checkoutModal");
+
+      if(
+        modal &&
+        modal.open
+      ){
+
+        modal.close();
+
+      }
+
+    }
+  );
+
+  /* =====================================================
+     CHECKOUT MODAL
+     ===================================================== */
+
+  const modal =
+    $("#checkoutModal");
+
+  let orderMode =
+    "delivery";
+
+  $("#orderToggle")
+    ?.addEventListener(
+      "click",
+      event => {
+
+        const button =
+          event.target.closest("button");
+
+        if(!button) return;
+
+        orderMode =
+          button.dataset.mode;
+
+        [
+          ...$("#orderToggle").children
+        ].forEach(
+          item =>
+            item.classList.toggle(
+              "active",
+              item === button
+            )
+        );
+
+        const addressField =
+          $("#addressField");
+
+        const addressInput =
+          $("#addressInput");
+
+        if(orderMode === "delivery"){
+
+          addressField
+            ?.classList
+            .remove("field-hidden");
+
+          if(addressInput){
+            addressInput.required = true;
+          }
+
+        }else{
+
+          addressField
+            ?.classList
+            .add("field-hidden");
+
+          if(addressInput){
+            addressInput.required = false;
+          }
+
+        }
+
+      }
+    );
+
+  $("#checkout")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        if(!Object.keys(cart).length)
+          return;
+
+        scrim?.classList.add("show");
+
+        modal?.showModal();
+
+      }
+    );
+
+  $("#closeModal")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        modal?.close();
+
+        scrim?.classList.remove(
+          "show"
+        );
+
+      }
+    );
+
+  modal?.addEventListener(
+    "close",
+    () => {
+
+      scrim?.classList.remove(
+        "show"
+      );
+
+    }
+  );
+
+  /* =====================================================
+     GPS
+     ===================================================== */
+
+  $("#gps")
+    ?.addEventListener(
+      "click",
+      () => {
+
+        const gpsMessage =
+          $("#gpsmsg");
+
+        if(!navigator.geolocation){
+
+          gpsMessage.textContent =
+            "Location is not supported by this browser.";
+
+          return;
+
+        }
+
+        gpsMessage.textContent =
+          "Getting your location…";
+
+        navigator.geolocation.getCurrentPosition(
+
+          position => {
+
+            $("#lat").value =
+              position.coords.latitude;
+
+            $("#lng").value =
+              position.coords.longitude;
+
+            gpsMessage.textContent =
+              "✓ Location captured successfully.";
+
+          },
+
+          () => {
+
+            gpsMessage.textContent =
+              "Location permission denied — you can enter the address manually.";
+
+          },
+
+          {
+            enableHighAccuracy:true,
+            timeout:10000,
+            maximumAge:0
+          }
+
+        );
+
+      }
+    );
+
+  /* =====================================================
+     ORDER SUBMISSION
+     ===================================================== */
+
+  $("#form")
+    ?.addEventListener(
+      "submit",
+      event => {
+
+        event.preventDefault();
+
+        const form =
+          new FormData(event.target);
+
+        const items =
+          Object.entries(cart)
+            .map(
+              ([id, quantity]) => {
+
+                const product =
+                  P.find(
+                    item => item.id == id
+                  );
+
+                return {
+                  ...product,
+                  qty:quantity
+                };
+
+              }
+            );
+
+        const total =
+          items.reduce(
+            (sum,item) =>
+              sum +
+              item.price * item.qty,
+            0
+          );
+
+        const orderNumber =
+          "SC" +
+          Date.now()
+            .toString()
+            .slice(-7);
+
+        const latitude =
+          form.get("lat");
+
+        const longitude =
+          form.get("lng");
+
+        let locationText =
+          "Not shared";
+
+        if(
+          latitude &&
+          longitude
+        ){
+
+          locationText =
+            `https://www.google.com/maps?q=${
+              encodeURIComponent(
+                latitude + "," + longitude
+              )
+            }`;
+
+        }
+
+        const modeLabel = {
+          delivery:"Home Delivery",
+          takeaway:"Takeaway",
+          dinein:"Dine-in"
+        }[orderMode];
+
+        let message =
+          `🍽️ *NEW ORDER — SAVOR CAFE'*\\n\\n`;
+
+        message +=
+          `*Order:* ${orderNumber}\\n`;
+
+        message +=
+          `*Type:* ${modeLabel}\\n`;
+
+        message +=
+          `*Customer:* ${form.get("name")}\\n`;
+
+        message +=
+          `*Phone:* ${form.get("phone")}\\n`;
+
+        if(orderMode === "delivery"){
+
+          message +=
+            `*Address:* ${form.get("address")}\\n`;
+
+          message +=
+            `*Live Location:* ${locationText}\\n`;
+
+        }
+
+        message +=
+          `\\n*ITEMS*\\n`;
+
+        items.forEach(item => {
+
+          message +=
+            `• ${item.name} × ${item.qty} — ₹${item.price * item.qty}\\n`;
+
+        });
+
+        message +=
+          `\\n*TOTAL: ₹${total}*\\n`;
+
+        if(form.get("notes")){
+
+          message +=
+            `\\n*Note:* ${form.get("notes")}\\n`;
+
+        }
+
+        message +=
+          `\\nPlease confirm the order.`;
+
+        const whatsappUrl =
+          `https://wa.me/918981315889?text=${
+            encodeURIComponent(message)
+          }`;
+
+        Object.keys(cart)
+          .forEach(
+            key =>
+              delete cart[key]
+          );
+
+        renderCart();
+
+        items.forEach(
+          item =>
+            rebuildAllCopies(
+              item.name
+            )
+        );
+
+        modal?.close();
+
+        closeCart();
+
+        event.target.reset();
+
+        $("#gpsmsg").textContent =
+          "";
+
+        window.open(
+          whatsappUrl,
+          "_blank"
+        );
+
+      }
+    );
+
+  /* =====================================================
+     CONTACT FORM
+     ===================================================== */
+
+  $("#contactForm")
+    ?.addEventListener(
+      "submit",
+      event => {
+
+        event.preventDefault();
+
+        const form =
+          new FormData(
+            event.target
+          );
+
+        let message =
+          `📩 *Message from website*\\n\\n`;
+
+        message +=
+          `*Name:* ${form.get("cname")}\\n`;
+
+        if(form.get("cphone")){
+
+          message +=
+            `*Phone:* ${form.get("cphone")}\\n`;
+
+        }
+
+        message +=
+          `\\n${form.get("cmsg")}`;
+
+        const whatsappUrl =
+          `https://wa.me/918981315889?text=${
+            encodeURIComponent(message)
+          }`;
+
+        window.open(
+          whatsappUrl,
+          "_blank"
+        );
+
+        event.target.reset();
+
+      }
+    );
+
+  /* =====================================================
+     INITIAL CART RENDER
+     ===================================================== */
 
   renderCart();
+
 })();
