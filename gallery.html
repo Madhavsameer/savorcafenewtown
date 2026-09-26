@@ -1,0 +1,58 @@
+<!doctype html><html lang="en"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b0d10"><title>Gallery — Savor Cafe'</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/style.css"></head><body>
+<header class="navbar">
+  <div class="nav-inner">
+    <a class="brand" href="/index.html"><span class="brand-logo"><img src="/logo.png" alt="" onerror="this.style.display='none'"><i>S</i></span><span>Savor Cafe'</span></a>
+    <nav id="navLinks" class="nav-links" aria-label="Main navigation">
+      <a href="/index.html" data-page="home">Home</a>
+      <a href="/menu.html" data-page="menu">Menu</a>
+      <a href="/gallery.html" data-page="gallery">Gallery</a>
+      <a href="/about.html" data-page="about">About</a>
+      <a href="/contact.html" data-page="contact">Contact</a>
+      <a href="/cart.html" data-page="cart">Cart <b id="navCartCount">0</b></a>
+    </nav>
+    <div class="nav-actions">
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch theme" title="Switch theme">☀️</button>
+      <a class="cart-btn" href="/cart.html">🛒 <span>Cart</span><b id="cartCount">0</b></a>
+      <button id="navToggle" class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
+    </div>
+  </div>
+</header>
+<div id="navScrim" class="nav-scrim"></div>
+<div id="preloader" class="preloader" aria-hidden="true"><div class="loader-ring"></div><div class="loader-logo"><img src="/logo.png" alt="Savor Cafe' logo" onerror="this.style.display='none'"><span>S</span></div><b>Savor Cafe'</b><small>Good food, great moments.</small></div>
+<div class="view-cart-bar" id="viewCartBar" hidden>
+  <div><span>🛒</span><b id="floatingCartCount">0 items</b><small id="floatingCartTotal">₹0</small></div>
+  <a href="/cart.html">View Cart →</a>
+</div>
+<div class="floating-actions">
+  <a class="fab call" href="tel:+918981315889" aria-label="Call Savor Cafe'">📞</a>
+  <a class="fab wa" href="https://wa.me/918981315889" target="_blank" rel="noopener" aria-label="WhatsApp Savor Cafe'">💬</a>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+<main>
+<section class="simple-hero gallery-hero"><div class="container"><span class="eyebrow">OUR GALLERY</span><h1>A glimpse of <em>Savor Cafe'</em>.</h1><p>Explore the dining atmosphere, tables and food moments. Tap any photo to view it larger.</p></div></section>
+<div class="container gallery-page">
+<section class="gallery-slider-wrap"><div class="gallery-slider" id="gallerySlider">
+<div class="gallery-slide active"><img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1500&q=90" alt="Restaurant dining ambience"></div>
+<div class="gallery-slide"><img src="https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=1500&q=90" alt="Cafe dining table"></div>
+<div class="gallery-slide"><img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1500&q=90" alt="Restaurant interior"></div>
+<div class="gallery-slide"><img src="https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1500&q=90" alt="Cafe seating area"></div>
+<button class="gallery-arrow prev" id="galleryPrev" aria-label="Previous photo">‹</button><button class="gallery-arrow next" id="galleryNext" aria-label="Next photo">›</button>
+<div class="gallery-dots" id="galleryDots"></div></div></section>
+<section class="gallery-grid-section"><div class="section-head"><div><span class="eyebrow">PHOTO WALL</span><h2>Restaurant moments</h2></div><a target="_blank" rel="noopener" href="https://www.zomato.com/kolkata/savor-cafe-new-town/photos">See listing photos →</a></div>
+<div class="gallery-grid" id="galleryGrid">
+<a class="gallery-card" href="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=1500&q=90" target="_blank"><img src="https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&w=900&q=85" alt="Dining ambience"><span>Dining ambience</span></a>
+<a class="gallery-card" href="https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=1500&q=90" target="_blank"><img src="https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?auto=format&fit=crop&w=900&q=85" alt="Cafe table"><span>Cafe table</span></a>
+<a class="gallery-card" href="https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=1500&q=90" target="_blank"><img src="https://images.unsplash.com/photo-1552566626-52f8b828add9?auto=format&fit=crop&w=900&q=85" alt="Restaurant interior"><span>Interior</span></a>
+<a class="gallery-card" href="https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=1500&q=90" target="_blank"><img src="https://images.unsplash.com/photo-1521017432531-fbd92d768814?auto=format&fit=crop&w=900&q=85" alt="Cafe seating"><span>Seating</span></a>
+<a class="gallery-card" href="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=1500&q=90" target="_blank"><img src="https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?auto=format&fit=crop&w=900&q=85" alt="Restaurant table setting"><span>Table setting</span></a>
+<a class="gallery-card" href="https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=1500&q=90" target="_blank"><img src="https://images.unsplash.com/photo-1541544741938-0af808871cc0?auto=format&fit=crop&w=900&q=85" alt="Food and dining"><span>Food moments</span></a>
+</div></section>
+<p class="gallery-disclaimer">The image wall currently uses web-hosted restaurant/cafe visuals as placeholders. Replace these image URLs with your own Savor Cafe photos for an exact restaurant gallery.</p>
+</div></main>
+<footer><div class="container footer-grid"><div><a class="brand footer-brand" href="/index.html"><span class="brand-logo"><img src="/logo.png" alt="" onerror="this.style.display='none'"><i>S</i></span><span>Savor Cafe'</span></a><p>Tandoor, Chinese & Bengali favourites in New Town, Kolkata.</p></div><div><b>Explore</b><a href="/index.html">Home</a><a href="/menu.html">Menu</a><a href="/gallery.html">Gallery</a><a href="/about.html">About</a><a href="/contact.html">Contact</a></div><div><b>Contact</b><a href="tel:+918981315889">8981315889</a><a href="tel:+919456411230">9456411230</a><a href="https://wa.me/918981315889" target="_blank">WhatsApp</a></div><div><b>Visit</b><a target="_blank" href="https://www.google.com/maps/search/?api=1&query=Savor+Cafe+Shop+129+DB+Community+Market+New+Town+Kolkata">Shop 129, DB Community Market, New Town</a><span>11 AM – 11 PM · Daily</span></div></div><div class="container footer-bottom"><span>© 2026 Savor Cafe'</span><span>Come hungry, leave happy.</span></div></footer>
+<script>window.MENU_PRODUCTS=[];</script><script src="/app.js"></script></body></html>
