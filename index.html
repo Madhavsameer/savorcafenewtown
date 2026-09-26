@@ -1,312 +1,330 @@
-const CATEGORY_LABELS = {
-  starters:"Starters (6 pcs)", tandoor:"Tandoor (6 pcs)", noodles:"Noodles", chinese:"Chinese",
-  soup:"Soups", seafood:"Seafood", salad:"Salads & Drinks", combo:"Indian Combos",
-  veg:"Vegetarian Mains", roti:"Tawa Roti & Breads", biryani:"Biryani & Khichuri", rice:"Rice & Mains"
-};
-const CATEGORY_ICONS = {
-  starters:"🍢", tandoor:"🔥", noodles:"🍜", chinese:"🥢", soup:"🥣", seafood:"🐟",
-  salad:"🥗", combo:"🍛", veg:"🥦", roti:"🫓", biryani:"🍚", rice:"🍚"
-};
-const CATEGORY_ORDER = ["starters","tandoor","noodles","chinese","soup","seafood","veg","combo","biryani","rice","roti","salad"];
-const NONVEG_WORDS = ["chicken","mutton","fish","egg","katla","rui","prawn","meat"];
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#150E09">
+<title>Savor Cafe' — New Town, Kolkata</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,600;0,9..144,700;1,9..144,500&family=Work+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-(function(){
-  const P = window.MENU_PRODUCTS;
-  const isVeg = p => !NONVEG_WORDS.some(w => p.name.toLowerCase().includes(w));
-  P.forEach(p => p.veg = isVeg(p));
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
 
-  const cart = {};
-  const $ = sel => document.querySelector(sel);
+<div id="preloader"><div class="pre-mark"><span>S</span></div><p>Savor Cafe'</p></div>
 
-  // ---- preloader: one short, guaranteed branded moment — never depends on slow network/font loads ----
-  requestAnimationFrame(() => {
-    setTimeout(() => $('#preloader')?.classList.add('hide'), 650);
-  });
+<div class="navbar">
+  <div class="nav-row">
+    <a class="brandmark" data-nav="home">
+      <div class="mark"><img src="/logo.png" alt="" onerror="this.parentElement.innerHTML='&lt;span&gt;S&lt;/span&gt;'"></div>
+      <span class="brand-word">Savor Cafe'</span>
+    </a>
+    <nav class="nav-links" id="navLinks">
+      <a data-nav="home">Home</a>
+      <a data-nav="menu">Menu</a>
+      <a data-nav="about">About</a>
+      <a data-nav="contact">Contact</a>
+    </nav>
+    <button class="cart-btn" id="cartBtn" aria-label="Open cart">🛒 <span class="cart-count" id="count">0</span></button>
+    <button class="nav-toggle" id="navToggle" aria-label="Open menu">☰</button>
+  </div>
+</div>
+<div class="nav-scrim" id="navScrim"></div>
 
-  // ---- keep sticky offsets correct on notched phones (the navbar grows taller there) ----
-  function setNavHeight(){
-    const nb = document.querySelector('.navbar');
-    if (nb) document.documentElement.style.setProperty('--navh', nb.getBoundingClientRect().height + 'px');
-  }
-  setNavHeight();
-  window.addEventListener('resize', setNavHeight);
-  window.addEventListener('orientationchange', () => setTimeout(setNavHeight, 250));
-
-  // ---- status pill ----
-  function updateStatus(){
-    const h = new Date().getHours();
-    const open = h >= 11 && h < 23;
-    $('#statusDot').classList.toggle('closed', !open);
-    $('#statusText').textContent = open ? 'Open now' : 'Closed — opens 11:00 AM';
-  }
-  updateStatus();
-
-  // ---- mobile nav toggle (defined before routing, since goTo() calls closeNav on first load) ----
-  const navLinks = $('#navLinks'), navScrim = $('#navScrim'), navToggle = $('#navToggle');
-  function closeNav(){ navLinks.classList.remove('open'); navScrim.classList.remove('show'); navToggle.setAttribute('aria-expanded','false'); navToggle.textContent='☰'; }
-  function openNav(){ navLinks.classList.add('open'); navScrim.classList.add('show'); navToggle.setAttribute('aria-expanded','true'); navToggle.textContent='✕'; setNavHeight(); }
-  navToggle.onclick = () => { navLinks.classList.contains('open') ? closeNav() : openNav(); };
-  navScrim.onclick = closeNav;
-
-  // ---- routing ----
-  const pages = [...document.querySelectorAll('.page')];
-  function goTo(name){
-    pages.forEach(p => p.classList.toggle('active', p.dataset.page === name));
-    document.querySelectorAll('[data-nav]').forEach(a => {
-      if (a.closest('.nav-links')) a.classList.toggle('active', a.dataset.nav === name);
-    });
-    closeNav();
-    window.scrollTo(0,0);
-    setTimeout(setNavHeight, 50);
-    if (location.hash.slice(1) !== name) history.replaceState(null,'','#'+name);
-  }
-  document.querySelectorAll('[data-nav]').forEach(a => a.addEventListener('click', e => {
-    e.preventDefault();
-    goTo(a.dataset.nav);
-  }));
-  window.addEventListener('hashchange', () => {
-    const n = location.hash.slice(1) || 'home';
-    if (['home','menu','about','contact'].includes(n)) goTo(n);
-  });
-  goTo(location.hash.slice(1) || 'home');
-
-  // ---- home category cards ----
-  const present = CATEGORY_ORDER.filter(c => P.some(p => p.category === c));
-  const homeCats = $('#homeCats');
-  present.forEach(c => {
-    const card = document.createElement('button');
-    card.className = 'cat-card';
-    card.innerHTML = `<span class="ic">${CATEGORY_ICONS[c]||'🍴'}</span><h4>${CATEGORY_LABELS[c]}</h4><span>${P.filter(p=>p.category===c).length} dishes</span>`;
-    card.onclick = () => { goTo('menu'); setTimeout(() => document.getElementById('s-'+c)?.scrollIntoView({behavior:'smooth'}), 60); };
-    homeCats.appendChild(card);
-  });
-
-  // ---- categories row (menu page) ----
-  const catsEl = $('#cats'), menuEl = $('#menu'), searchEl = $('#search');
-  present.forEach(c => {
-    const btn = document.createElement('button');
-    btn.className = 'cat';
-    btn.textContent = CATEGORY_LABELS[c] || c;
-    btn.dataset.cat = c;
-    btn.onclick = () => document.getElementById('s-'+c).scrollIntoView({behavior:'smooth', block:'start'});
-    catsEl.appendChild(btn);
-  });
-
-  const currentIndexByName = {};
-  P.forEach(p => currentIndexByName[p.name.toLowerCase()] = p);
-
-  function itemCard(p){
-    const e = document.createElement('div');
-    e.className = 'item';
-    e.dataset.name = p.name.toLowerCase();
-    e.innerHTML = `
-      <div class="item-info">
-        <span class="dot ${p.veg?'veg':'nonveg'}" title="${p.veg?'Veg':'Non-veg'}"></span>
-        <div><div class="item-name">${p.name}</div><div class="item-price">₹${p.price}</div></div>
+<!-- ============ HOME ============ -->
+<section class="page" id="page-home" data-page="home">
+  <header class="hero">
+    <div class="hero-inner">
+      <div class="heroBrand">
+        <div class="mark-lg"><img src="/logo.png" alt="" onerror="this.parentElement.innerHTML='&lt;span&gt;S&lt;/span&gt;'"></div>
+        <div>
+          <div class="eyebrow">Hotel &amp; Restaurant</div>
+          <h1>Savor Cafe'</h1>
+          <p class="sub">Tandoor, Chinese &amp; Bengali favourites in New Town</p>
+        </div>
       </div>
-      <div class="qty-slot"></div>`;
-    renderQtySlot(e.querySelector('.qty-slot'), p);
-    return e;
-  }
-  function renderQtySlot(slot, p){
-    const q = cart[p.id] || 0;
-    if (!q){
-      slot.innerHTML = `<button class="add-btn">Add</button>`;
-      slot.querySelector('.add-btn').onclick = () => addToCart(p);
-    } else {
-      slot.innerHTML = `<div class="stepper"><button data-d="-1" aria-label="Remove one">−</button><span class="n">${q}</span><button data-d="1" aria-label="Add one">+</button></div>`;
-      slot.querySelectorAll('button').forEach(b => b.onclick = () => changeQty(p, parseInt(b.dataset.d)));
-    }
-  }
-  function rebuildSlot(el){ if(!el) return; const p = currentIndexByName[el.dataset.name]; if (p) renderQtySlot(el.querySelector('.qty-slot'), p); }
-  function findEl(name){ return document.querySelector(`.item[data-name="${CSS.escape(name.toLowerCase())}"]`); }
-  // A dish can appear in more than one place (home preview + full menu) — keep every copy in sync.
-  function rebuildAllCopies(name){
-    document.querySelectorAll(`.item[data-name="${CSS.escape(name.toLowerCase())}"]`).forEach(rebuildSlot);
-  }
+      <div class="hero-meta">
+        <span class="status-pill"><span class="status-dot" id="statusDot"></span><span id="statusText">Checking hours…</span></span>
+        <div class="hero-actions">
+          <a class="btn btn-gold" data-nav="menu">View full menu</a>
+          <a class="btn btn-wa" href="https://wa.me/918981315889" target="_blank" rel="noopener">Order on WhatsApp</a>
+        </div>
+        <div class="hero-addr">ADD-DB, Market 8 No, Tank, New Town, Kolkata · Open daily, 11:00 AM – 11:00 PM</div>
+      </div>
+    </div>
+  </header>
 
-  // ---- home "Popular Dishes" preview ----
-  const POPULAR_IDS = [30,86,24,43,20,52,88,41,84,44];
-  const popularWrap = $('#homePopular');
-  if (popularWrap){
-    const grid = document.createElement('div');
-    grid.className = 'grid';
-    POPULAR_IDS.forEach(id => { const p = P.find(x => x.id === id); if (p) grid.appendChild(itemCard(p)); });
-    popularWrap.appendChild(grid);
-  }
+  <div class="home-main">
+    <div class="strip">
+      <div class="card"><div class="ic">🍽️</div><h4>Dine-in, takeaway &amp; delivery</h4><p>However you'd rather eat, we've got a table, a bag, or a rider ready.</p></div>
+      <div class="card"><div class="ic">🔥</div><h4>Fresh off the tandoor</h4><p>Kebabs and breads fired to order, not held under a lamp.</p></div>
+      <div class="card"><div class="ic">💬</div><h4>Order in a tap</h4><p>Build your order here, confirm on WhatsApp — no app, no account.</p></div>
+    </div>
 
-  present.forEach(c => {
-    const section = document.createElement('section');
-    section.className = 'section';
-    section.id = 's-' + c;
-    const items = P.filter(p => p.category === c);
-    section.innerHTML = `<h3>${CATEGORY_LABELS[c]||c} <small>${items.length} dishes</small></h3>`;
-    const grid = document.createElement('div');
-    grid.className = 'grid';
-    items.forEach(p => grid.appendChild(itemCard(p)));
-    section.appendChild(grid);
-    menuEl.appendChild(section);
-  });
+    <div class="sec-head"><h2>Explore the menu</h2><a data-nav="menu">See everything →</a></div>
+    <div class="cat-cards" id="homeCats"></div>
 
-  function addToCart(p){
-    cart[p.id] = (cart[p.id]||0) + 1;
-    renderCart();
-    showToast(p.name + ' added');
-    rebuildAllCopies(p.name);
-  }
-  function changeQty(p, d){
-    cart[p.id] = (cart[p.id]||0) + d;
-    if (cart[p.id] <= 0) delete cart[p.id];
-    renderCart();
-    rebuildAllCopies(p.name);
-  }
+    <div class="sec-head"><h2>Popular dishes</h2><a data-nav="menu">Full menu →</a></div>
+    <div class="legend" style="justify-content:flex-start;margin:-6px 0 14px"><span><i class="dot veg"></i>Veg</span><span><i class="dot nonveg"></i>Non-veg</span></div>
+    <div id="homePopular" style="margin-bottom:56px"></div>
 
-  function renderCart(){
-    const box = $('#cartItems');
-    const entries = Object.entries(cart);
-    let total = 0, count = 0;
-    if (!entries.length){
-      box.innerHTML = `<div class="cart-empty">Your cart is empty.<br>Add a few dishes to get started.</div>`;
-    } else {
-      box.innerHTML = '';
-      entries.forEach(([id, qty]) => {
-        const p = P.find(x => x.id == id);
-        if (!p) return;
-        total += p.price * qty; count += qty;
-        const line = document.createElement('div');
-        line.className = 'line';
-        line.innerHTML = `
-          <div><div class="li-name">${p.name}</div><div class="li-price">₹${p.price} × ${qty} = ₹${p.price*qty}</div><button class="remove">Remove</button></div>
-          <div class="stepper"><button data-d="-1" aria-label="Remove one">−</button><span class="n">${qty}</span><button data-d="1" aria-label="Add one">+</button></div>`;
-        line.querySelector('.remove').onclick = () => { delete cart[p.id]; renderCart(); rebuildAllCopies(p.name); };
-        line.querySelectorAll('.stepper button').forEach(b => b.onclick = () => changeQty(p, parseInt(b.dataset.d)));
-        box.appendChild(line);
-      });
-    }
-    $('#total').textContent = '₹' + total;
-    const countEl = $('#count');
-    if (countEl.textContent != count) { countEl.textContent = count; countEl.classList.remove('bump'); void countEl.offsetWidth; countEl.classList.add('bump'); }
-    $('#checkout').disabled = !count;
+    <div class="cta-band">
+      <h3>Hungry already?</h3>
+      <p>103 dishes across tandoor, Chinese, biryani and more — search, add, and order in a couple of minutes.</p>
+      <a class="btn btn-gold" data-nav="menu">Start your order</a>
+    </div>
+  </div>
+</section>
 
-    // ---- View Cart bar: appears the moment there's at least one item ----
-    const bar = $('#viewCartBar'), fabGroup = $('#fabGroup');
-    if (count){
-      $('#vcbCount').textContent = count;
-      $('#vcbTotal').textContent = '₹' + total;
-      bar.classList.add('show');
-      fabGroup.classList.add('lift');
-    } else {
-      bar.classList.remove('show');
-      fabGroup.classList.remove('lift');
-    }
-  }
+<!-- ============ MENU ============ -->
+<section class="page" id="page-menu" data-page="menu">
+  <div class="menu-main">
+    <div class="intro">
+      <h2>Order your favourites</h2>
+      <p>Dine-in &middot; Takeaway &middot; Home delivery</p>
+      <div class="legend"><span><i class="dot veg"></i>Veg</span><span><i class="dot nonveg"></i>Non-veg</span></div>
+    </div>
+    <div class="search-wrap">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.3-4.3"/></svg>
+      <input id="search" type="search" placeholder="Search the menu — try 'chicken' or 'paneer'" autocomplete="off">
+      <button id="searchClear" aria-label="Clear search">✕</button>
+    </div>
+    <div class="cats-row" id="cats"></div>
+    <div id="menu"></div>
+    <div class="empty-state" id="emptyState" style="display:none">
+      <h3>No dishes match "<span id="emptyQuery"></span>"</h3>
+      <p>Try a different search, or clear it to see the full menu.</p>
+    </div>
+  </div>
+</section>
 
-  let toastTimer;
-  function showToast(msg){
-    const t = $('#toast');
-    t.textContent = msg; t.classList.add('show');
-    clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => t.classList.remove('show'), 1800);
-  }
+<!-- ============ ABOUT ============ -->
+<section class="page" id="page-about" data-page="about">
+  <div class="about-main">
+    <div class="about-hero">
+      <h2>A New Town kitchen for every craving</h2>
+      <p>Savor Cafe' brings together the tandoor, the Chinese wok and the Bengali kitchen under one roof — a menu built for regular weeknight orders as much as weekend get-togethers.</p>
+    </div>
+    <div class="about-grid">
+      <div class="about-card">
+        <h4>What we cook</h4>
+        <p>From tandoori kebabs and butter chicken to Manchurian, chilli fish and mutton biryani, the menu spans over a hundred dishes — so the table rarely has to agree on just one cuisine.</p>
+      </div>
+      <div class="about-card">
+        <h4>How you can eat</h4>
+        <p>Walk in for dine-in, swing by for takeaway, or order delivery straight to your door in New Town — every option ends in the same fresh plate.</p>
+      </div>
+    </div>
+    <div class="values">
+      <div class="v"><div class="ic">🌿</div><h5>Veg &amp; non-veg, clearly marked</h5><p>Every dish is tagged so you know exactly what you're ordering.</p></div>
+      <div class="v"><div class="ic">⏱️</div><h5>Open 11 AM – 11 PM</h5><p>Lunch, dinner, or a late-evening craving — daily, no closed days.</p></div>
+      <div class="v"><div class="ic">📍</div><h5>Easy to find</h5><p>ADD-DB, Market 8 No, Tank, New Town — a short trip for most of the neighbourhood.</p></div>
+    </div>
+  </div>
+</section>
 
-  searchEl.addEventListener('input', () => {
-    const q = searchEl.value.trim().toLowerCase();
-    $('#searchClear').classList.toggle('show', !!q);
-    let anyVisible = false;
-    document.querySelectorAll('.section').forEach(section => {
-      let has = false;
-      section.querySelectorAll('.item').forEach(el => {
-        const match = !q || el.dataset.name.includes(q);
-        el.style.display = match ? '' : 'none';
-        if (match) has = true;
-      });
-      section.style.display = has ? '' : 'none';
-      if (has) anyVisible = true;
-    });
-    $('#emptyState').style.display = anyVisible || !q ? 'none' : 'block';
-    $('#emptyQuery').textContent = searchEl.value.trim();
-    catsEl.style.display = q ? 'none' : 'flex';
-  });
-  $('#searchClear').onclick = () => { searchEl.value=''; searchEl.dispatchEvent(new Event('input')); searchEl.focus(); };
+<!-- ============ CONTACT ============ -->
+<section class="page" id="page-contact" data-page="contact">
+  <div class="contact-main">
+    <div class="contact-head"><h2>Get in touch</h2><p>Questions, bulk orders, or feedback — we'd love to hear from you.</p></div>
+    <div class="contact-grid">
+      <div class="contact-cards">
+        <div class="c-card"><div class="ic">📞</div><div><h4>Call</h4><p><a href="tel:+918981315889">8981315889</a> &middot; <a href="tel:+919456411230">9456411230</a></p></div></div>
+        <div class="c-card"><div class="ic">💬</div><div><h4>WhatsApp</h4><p><a href="https://wa.me/918981315889" target="_blank" rel="noopener">Message us directly</a></p></div></div>
+        <div class="c-card"><div class="ic">📍</div><div><h4>Address</h4><p>ADD-DB, Market 8 No, Tank, New Town, Kolkata<br><a href="https://www.google.com/maps/search/?api=1&query=Savor+Cafe+New+Town+Kolkata" target="_blank" rel="noopener">Get directions →</a></p></div></div>
+        <div class="c-card"><div class="ic">🕒</div><div><h4>Hours</h4><p>Open daily, 11:00 AM – 11:00 PM</p></div></div>
+      </div>
+      <div class="contact-form">
+        <h4>Send us a message</h4>
+        <p>This opens WhatsApp with your message pre-filled — just hit send.</p>
+        <form id="contactForm">
+          <label>Name<input name="cname" required></label>
+          <label>Phone<input name="cphone" inputmode="tel"></label>
+          <label>Message<textarea name="cmsg" required placeholder="Ask about catering, bulk orders, anything…"></textarea></label>
+          <div class="modal-actions"><button class="btn btn-gold btn-full" type="submit">Send on WhatsApp</button></div>
+        </form>
+      </div>
+    </div>
+  </div>
+</section>
 
-  const catButtons = [...catsEl.querySelectorAll('.cat')];
-  const sections = present.map(c => document.getElementById('s-'+c));
-  const io = new IntersectionObserver(entries => {
-    entries.forEach(en => { if (en.isIntersecting){ const id = en.target.id.replace('s-',''); catButtons.forEach(b => b.classList.toggle('active', b.dataset.cat === id)); } });
-  }, {rootMargin:'-160px 0px -70% 0px'});
-  sections.forEach(s => io.observe(s));
+<div class="scrim" id="scrim"></div>
 
-  const cartEl = $('#cart'), scrim = $('#scrim');
-  function openCart(){ cartEl.classList.add('open'); scrim.classList.add('show'); }
-  function closeCartFn(){ cartEl.classList.remove('open'); scrim.classList.remove('show'); }
-  $('#cartBtn').onclick = openCart;
-  $('#vcbBtn').onclick = openCart;
-  $('#closeCart').onclick = closeCartFn;
-  scrim.onclick = () => { closeCartFn(); $('#checkoutModal').close(); };
+<aside id="cart" aria-label="Your order">
+  <div class="cart-head"><h2>Your order</h2><button class="icon-btn" id="closeCart" aria-label="Close cart">✕</button></div>
+  <div id="cartItems"></div>
+  <div class="cart-foot">
+    <div class="cart-total-row"><span>Total</span><b id="total">₹0</b></div>
+    <button id="checkout" class="btn btn-gold btn-full" disabled>Proceed to checkout</button>
+  </div>
+</aside>
 
-  const modal = $('#checkoutModal');
-  let orderMode = 'delivery';
-  $('#orderToggle').addEventListener('click', e => {
-    const b = e.target.closest('button'); if(!b) return;
-    orderMode = b.dataset.mode;
-    [...$('#orderToggle').children].forEach(x => x.classList.toggle('active', x===b));
-    const addrField = $('#addressField'), addrInput = $('#addressInput');
-    if (orderMode === 'delivery'){ addrField.classList.remove('field-hidden'); addrInput.required = true; }
-    else { addrField.classList.add('field-hidden'); addrInput.required = false; }
-  });
-  $('#checkout').onclick = () => { if (Object.keys(cart).length){ scrim.classList.add('show'); modal.showModal(); } };
-  $('#closeModal').onclick = () => { modal.close(); scrim.classList.remove('show'); };
-  modal.addEventListener('close', () => scrim.classList.remove('show'));
+<dialog id="checkoutModal">
+  <div class="modal-inner">
+    <div class="modal-head"><h2>Complete your order</h2><button class="icon-btn" id="closeModal" aria-label="Close">✕</button></div>
+    <div class="order-toggle" id="orderToggle">
+      <button type="button" data-mode="delivery" class="active">Delivery</button>
+      <button type="button" data-mode="takeaway">Takeaway</button>
+      <button type="button" data-mode="dinein">Dine-in</button>
+    </div>
+    <form id="form">
+      <label>Name<input name="name" required autocomplete="name"></label>
+      <label>Phone<input name="phone" required inputmode="tel" autocomplete="tel"></label>
+      <div id="addressField">
+        <label>Delivery address<textarea name="address" id="addressInput"></textarea></label>
+        <button type="button" id="gps" class="btn btn-ghost" style="margin-top:10px">📍 Use live location</button>
+        <small id="gpsmsg"></small>
+        <input type="hidden" name="lat" id="lat">
+        <input type="hidden" name="lng" id="lng">
+      </div>
+      <label>Notes (optional)<textarea name="notes" placeholder="Spice level, allergies, anything else"></textarea></label>
+      <div class="modal-actions"><button class="btn btn-gold btn-full" type="submit">Place order on WhatsApp</button></div>
+    </form>
+  </div>
+</dialog>
 
-  $('#gps').onclick = () => {
-    if (!navigator.geolocation){ $('#gpsmsg').textContent = 'Location is not supported by this browser.'; return; }
-    $('#gpsmsg').textContent = 'Getting your location…';
-    navigator.geolocation.getCurrentPosition(
-      pos => { $('#lat').value = pos.coords.latitude; $('#lng').value = pos.coords.longitude; $('#gpsmsg').textContent = '✓ Location captured successfully.'; },
-      () => { $('#gpsmsg').textContent = 'Location permission denied — you can enter the address manually.'; },
-      {enableHighAccuracy:true, timeout:10000, maximumAge:0}
-    );
-  };
+<div id="toast" role="status"></div>
 
-  $('#form').addEventListener('submit', e => {
-    e.preventDefault();
-    const f = new FormData(e.target);
-    const items = Object.entries(cart).map(([id,qty]) => ({...P.find(x=>x.id==id), qty}));
-    const total = items.reduce((s,x)=>s+x.price*x.qty,0);
-    const orderNo = 'SC' + Date.now().toString().slice(-7);
-    const lat = f.get('lat'), lng = f.get('lng');
-    let locationText = 'Not shared';
-    if (lat && lng) locationText = `https://www.google.com/maps?q=${encodeURIComponent(lat+','+lng)}`;
-    const modeLabel = {delivery:'Home Delivery', takeaway:'Takeaway', dinein:'Dine-in'}[orderMode];
+<div class="view-cart-bar" id="viewCartBar">
+  <div class="vcb-info"><b id="vcbCount">0</b><span>items · <b id="vcbTotal">₹0</b></span></div>
+  <button id="vcbBtn">View Cart <span aria-hidden="true">→</span></button>
+</div>
 
-    let message = `🍽️ *NEW ORDER — SAVOR CAFE'*\n\n`;
-    message += `*Order:* ${orderNo}\n*Type:* ${modeLabel}\n*Customer:* ${f.get('name')}\n*Phone:* ${f.get('phone')}\n`;
-    if (orderMode === 'delivery'){ message += `*Address:* ${f.get('address')}\n*Live Location:* ${locationText}\n`; }
-    message += `\n*ITEMS*\n`;
-    items.forEach(x => { message += `• ${x.name} × ${x.qty} — ₹${x.price*x.qty}\n`; });
-    message += `\n*TOTAL: ₹${total}*\n`;
-    if (f.get('notes')) message += `\n*Note:* ${f.get('notes')}\n`;
-    message += `\nPlease confirm the order.`;
+<div class="fab-group" id="fabGroup">
+  <a class="fab fab-call" href="tel:+918981315889" aria-label="Call Savor Cafe'">📞</a>
+  <a class="fab fab-wa" href="https://wa.me/918981315889" target="_blank" rel="noopener" aria-label="WhatsApp Savor Cafe'">💬</a>
+</div>
 
-    const waUrl = `https://wa.me/918981315889?text=${encodeURIComponent(message)}`;
-    Object.keys(cart).forEach(k => delete cart[k]);
-    renderCart();
-    items.forEach(it => rebuildAllCopies(it.name));
-    modal.close(); closeCartFn();
-    e.target.reset(); $('#gpsmsg').textContent = '';
-    window.open(waUrl, '_blank');
-  });
+<footer>
+  <div class="foot-top">
+    <div>
+      <div class="foot-brand"><div class="mark"><img src="/logo.png" alt="" onerror="this.parentElement.innerHTML='&lt;span&gt;S&lt;/span&gt;'"></div><span class="brand-word">Savor Cafe'</span></div>
+      <p class="tag">Tandoor, Chinese &amp; Bengali favourites, made fresh for dine-in, takeaway and delivery in New Town.</p>
+    </div>
+    <div class="foot-col"><b>Explore</b>
+      <a data-nav="home">Home</a><a data-nav="menu">Menu</a><a data-nav="about">About</a><a data-nav="contact">Contact</a>
+    </div>
+    <div class="foot-col"><b>Contact</b>
+      <a href="tel:+918981315889">8981315889</a><a href="tel:+919456411230">9456411230</a>
+      <a href="https://wa.me/918981315889" target="_blank" rel="noopener">WhatsApp</a>
+    </div>
+    <div class="foot-col"><b>Visit</b>
+      <a href="https://www.google.com/maps/search/?api=1&query=Savor+Cafe+New+Town+Kolkata" target="_blank" rel="noopener">ADD-DB, Market 8 No, Tank, New Town</a>
+      <a href="#" style="pointer-events:none">Open daily, 11 AM – 11 PM</a>
+    </div>
+  </div>
+  <div class="foot-bottom"><span>© 2026 Savor Cafe'. All rights reserved.</span><span>Come hungry, leave happy.</span></div>
+</footer>
 
-  // ---- contact form -> whatsapp ----
-  $('#contactForm').addEventListener('submit', e => {
-    e.preventDefault();
-    const f = new FormData(e.target);
-    let msg = `📩 *Message from website*\n\n*Name:* ${f.get('cname')}\n`;
-    if (f.get('cphone')) msg += `*Phone:* ${f.get('cphone')}\n`;
-    msg += `\n${f.get('cmsg')}`;
-    window.open(`https://wa.me/918981315889?text=${encodeURIComponent(msg)}`, '_blank');
-    e.target.reset();
-  });
-
-  renderCart();
-})();
+<script>
+window.MENU_PRODUCTS = [
+{"id":1,"name":"Veg Pakora","price":149,"category":"starters"},
+{"id":2,"name":"Paneer Pakora","price":179,"category":"starters"},
+{"id":3,"name":"Veg Fingers","price":149,"category":"starters"},
+{"id":4,"name":"French Fries","price":109,"category":"starters"},
+{"id":5,"name":"Chilli Babycorn","price":169,"category":"starters"},
+{"id":6,"name":"Mushroom Chilli","price":179,"category":"starters"},
+{"id":7,"name":"Pepper Chicken (6 pcs)","price":179,"category":"starters"},
+{"id":8,"name":"Chicken Lollipop","price":169,"category":"starters"},
+{"id":9,"name":"Crispy Chicken","price":179,"category":"starters"},
+{"id":10,"name":"Crispy Chilli Chicken","price":189,"category":"starters"},
+{"id":11,"name":"Chicken Bone Roast","price":210,"category":"starters"},
+{"id":12,"name":"Chicken Popcorn","price":179,"category":"starters"},
+{"id":13,"name":"Chicken Nuggets","price":159,"category":"starters"},
+{"id":14,"name":"Chicken Cheese Roast","price":199,"category":"starters"},
+{"id":15,"name":"Butter Fried Kebab","price":210,"category":"starters"},
+{"id":16,"name":"Reshmi Cheese Kebab","price":210,"category":"tandoor"},
+{"id":17,"name":"Tikka Kebab","price":179,"category":"tandoor"},
+{"id":18,"name":"Tangri Kebab","price":189,"category":"tandoor"},
+{"id":19,"name":"Hariyali Kebab","price":189,"category":"tandoor"},
+{"id":20,"name":"Tandoori Chicken Full","price":450,"category":"tandoor"},
+{"id":21,"name":"Tandoori Chicken Half","price":250,"category":"tandoor"},
+{"id":22,"name":"Tandoori Boti","price":199,"category":"tandoor"},
+{"id":23,"name":"Paneer Malai Kebab","price":210,"category":"tandoor"},
+{"id":24,"name":"Paneer Tikka","price":199,"category":"tandoor"},
+{"id":25,"name":"Broccoli Malai Kebab","price":249,"category":"tandoor"},
+{"id":26,"name":"Aloo Tandoori","price":189,"category":"tandoor"},
+{"id":27,"name":"Chicken Reshmi Masala","price":189,"category":"tandoor"},
+{"id":28,"name":"Tikka Butter Masala","price":179,"category":"tandoor"},
+{"id":29,"name":"Tandoori Masala","price":210,"category":"tandoor"},
+{"id":30,"name":"Butter Chicken","price":169,"category":"tandoor"},
+{"id":31,"name":"Chicken Kosha","price":169,"category":"tandoor"},
+{"id":32,"name":"Chicken Curry","price":159,"category":"tandoor"},
+{"id":33,"name":"Kadai Chicken","price":169,"category":"tandoor"},
+{"id":34,"name":"Chicken Bharta","price":189,"category":"tandoor"},
+{"id":35,"name":"Dhaba Chicken","price":179,"category":"tandoor"},
+{"id":36,"name":"Egg Noodles","price":149,"category":"noodles"},
+{"id":37,"name":"Chicken Egg Noodles","price":159,"category":"noodles"},
+{"id":38,"name":"Mix Noodles","price":179,"category":"noodles"},
+{"id":39,"name":"Chicken Gravy Noodles","price":179,"category":"noodles"},
+{"id":40,"name":"Paneer Chilli","price":169,"category":"chinese"},
+{"id":41,"name":"Veg Manchurian","price":159,"category":"chinese"},
+{"id":42,"name":"Mushroom Chilli Gravy","price":169,"category":"chinese"},
+{"id":43,"name":"Chilli Chicken","price":159,"category":"chinese"},
+{"id":44,"name":"Chicken Manchurian","price":169,"category":"chinese"},
+{"id":45,"name":"Garlic Chicken","price":169,"category":"chinese"},
+{"id":46,"name":"Honey Chicken","price":179,"category":"chinese"},
+{"id":47,"name":"Veg Soup","price":119,"category":"soup"},
+{"id":48,"name":"Chicken Clear Soup","price":119,"category":"soup"},
+{"id":49,"name":"Chicken Manchow Soup","price":139,"category":"soup"},
+{"id":50,"name":"Chicken Hot & Sour Soup","price":149,"category":"soup"},
+{"id":51,"name":"Fish Fingers","price":179,"category":"seafood"},
+{"id":52,"name":"Fish Fry","price":189,"category":"seafood"},
+{"id":53,"name":"Fish Chilli","price":210,"category":"seafood"},
+{"id":54,"name":"Rui Fish Curry","price":169,"category":"seafood"},
+{"id":55,"name":"Katla Fish Curry","price":179,"category":"seafood"},
+{"id":56,"name":"Green Salad","price":79,"category":"salad"},
+{"id":57,"name":"Cold Drinks (250ml)","price":30,"category":"salad"},
+{"id":58,"name":"Veg Raita","price":79,"category":"salad"},
+{"id":59,"name":"Water (500ml)","price":10,"category":"salad"},
+{"id":60,"name":"Roti (4pcs) + Chicken Kosha","price":179,"category":"combo"},
+{"id":61,"name":"Roti + Chicken Bharta","price":179,"category":"combo"},
+{"id":62,"name":"Paratha (2pcs) + Chicken Masala","price":180,"category":"combo"},
+{"id":63,"name":"Lachha Paratha + Chicken Roast","price":199,"category":"combo"},
+{"id":64,"name":"Rice + Chicken Curry","price":210,"category":"combo"},
+{"id":65,"name":"Paneer Chilli Rice","price":169,"category":"combo"},
+{"id":66,"name":"Veg Fried Rice","price":149,"category":"combo"},
+{"id":67,"name":"Chilli Chicken + Fried Rice","price":169,"category":"combo"},
+{"id":68,"name":"Manchurian Rice","price":179,"category":"combo"},
+{"id":69,"name":"Mix Veg","price":159,"category":"veg"},
+{"id":70,"name":"Paneer Butter Masala","price":169,"category":"veg"},
+{"id":71,"name":"Mushroom Masala","price":179,"category":"veg"},
+{"id":72,"name":"Paneer Tikka Masala","price":189,"category":"veg"},
+{"id":73,"name":"Aloo Dum","price":149,"category":"veg"},
+{"id":74,"name":"Aloo Matar","price":139,"category":"veg"},
+{"id":75,"name":"Aloo Bhindi","price":159,"category":"veg"},
+{"id":76,"name":"Yellow Dal Fry","price":110,"category":"veg"},
+{"id":77,"name":"Yellow Dal Tadka","price":130,"category":"veg"},
+{"id":78,"name":"Dal Makhani","price":149,"category":"veg"},
+{"id":79,"name":"Rajma Masala","price":159,"category":"veg"},
+{"id":80,"name":"Plain Paratha","price":25,"category":"roti"},
+{"id":81,"name":"Lachha Paratha","price":35,"category":"roti"},
+{"id":82,"name":"Aloo Paratha","price":50,"category":"roti"},
+{"id":83,"name":"Tandoori Roti","price":25,"category":"roti"},
+{"id":84,"name":"Butter Naan","price":45,"category":"roti"},
+{"id":85,"name":"Masala Kulcha","price":69,"category":"roti"},
+{"id":86,"name":"Chicken Biryani","price":149,"category":"biryani"},
+{"id":87,"name":"Egg Biryani","price":110,"category":"biryani"},
+{"id":88,"name":"Mutton Biryani","price":210,"category":"biryani"},
+{"id":89,"name":"Veg Khichuri","price":169,"category":"biryani"},
+{"id":90,"name":"Mutton Khichuri","price":219,"category":"biryani"},
+{"id":91,"name":"Basmati Plain Rice","price":99,"category":"rice"},
+{"id":92,"name":"Veg Pulao","price":130,"category":"rice"},
+{"id":93,"name":"Jira Rice","price":110,"category":"rice"},
+{"id":94,"name":"Mutton Kosha (4pcs)","price":230,"category":"rice"},
+{"id":95,"name":"Mutton Aloo Curry","price":219,"category":"rice"},
+{"id":96,"name":"Mutton Handi","price":230,"category":"rice"},
+{"id":97,"name":"Mutton Chap","price":259,"category":"rice"},
+{"id":98,"name":"Veg Fried Rice","price":139,"category":"rice"},
+{"id":99,"name":"Chicken Fried Rice","price":149,"category":"rice"},
+{"id":100,"name":"Egg Chicken Rice","price":159,"category":"rice"},
+{"id":101,"name":"Mix Fried Rice","price":179,"category":"rice"},
+{"id":102,"name":"Schezwan Chicken Rice","price":159,"category":"rice"},
+{"id":103,"name":"Veg Noodles","price":139,"category":"noodles"}
+];
+</script>
+<script src="/app.js"></script>
+</body>
+</html>
