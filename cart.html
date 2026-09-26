@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#17110b"><title>Savor Cafe' — New Town, Kolkata</title>
+<meta name="theme-color" content="#17110b"><title>Cart — Savor Cafe'</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css"></head><body>
@@ -22,28 +22,14 @@
 </header>
 <div id="navScrim" class="nav-scrim"></div>
 
-<main>
-<section class="hero">
-<div class="hero-glow"></div><div class="hero-inner">
-<div class="hero-copy"><span class="eyebrow">HOTEL & RESTAURANT · NEW TOWN</span>
-<h1>Good food,<br><em>great moments.</em></h1>
-<p>Tandoor, Chinese & Bengali favourites made fresh for New Town, Kolkata.</p>
-<div class="hero-buttons"><a class="btn primary" href="/menu.html">Explore Menu →</a><a class="btn whatsapp" href="https://wa.me/918981315889" target="_blank">WhatsApp Order</a></div>
-<div class="hero-meta"><span class="status"><i id="statusDot"></i><b id="statusText">Checking...</b></span><span>11 AM – 11 PM · Daily</span></div>
-</div>
-<div class="hero-card"><div class="hero-card-top">CHEF'S PICK <strong>🔥</strong></div><div class="hero-card-art">🍗</div><h3>Butter Chicken</h3><p>Rich, creamy & full of flavour</p><strong class="price">₹169</strong></div>
-</div></section>
-<div class="container">
-<section class="feature-grid">
-<article><span>🔥</span><div><b>Fresh from the kitchen</b><p>Prepared fresh when you order.</p></div></article>
-<article><span>🛵</span><div><b>Delivery & takeaway</b><p>Easy ordering for every craving.</p></div></article>
-<article><span>💬</span><div><b>No app required</b><p>Build your order and confirm on WhatsApp.</p></div></article>
-</section>
-<section class="section-block"><div class="section-head"><div><span class="eyebrow">DISCOVER</span><h2>Explore our menu</h2></div><a href="/menu.html">View all →</a></div>
-<div id="homeCats" class="category-grid"></div></section>
-<section class="section-block"><div class="section-head"><div><span class="eyebrow">FAVOURITES</span><h2>Popular dishes</h2></div><a href="/menu.html">Full menu →</a></div><div id="homePopular" class="popular-grid"></div></section>
-<section class="cta"><div><span class="eyebrow">READY TO EAT?</span><h2>Your next favourite meal is one tap away.</h2><p>Choose your dishes and send the order directly on WhatsApp.</p></div><a class="btn primary" href="/menu.html">Start your order →</a></section>
-</div></main>
+<main><section class="simple-hero"><div class="container"><span class="eyebrow">YOUR ORDER</span><h1>Your <em>cart.</em></h1><p>Review your items and place your order on WhatsApp.</p></div></section>
+<div class="container cart-page"><div id="cartPageItems"></div><div class="cart-page-total"><span>Total</span><b id="cartPageTotal">₹0</b></div><button id="checkoutBtn" class="btn primary full" type="button">Proceed to checkout →</button><a class="continue-link" href="/menu.html">← Continue shopping</a></div></main>
+<dialog id="checkoutModal"><div class="modal"><div class="modal-head"><div><span class="eyebrow">ALMOST THERE</span><h2>Complete your order</h2></div><button id="closeModal" class="close-btn" type="button">×</button></div>
+<div id="orderMode" class="order-mode"><button type="button" data-mode="delivery" class="active">🛵 Delivery</button><button type="button" data-mode="takeaway">🥡 Takeaway</button><button type="button" data-mode="dinein">🍽️ Dine-in</button></div>
+<form id="checkoutForm"><label>Name<input name="name" required placeholder="Your name"></label><label>Phone<input name="phone" required inputmode="tel" placeholder="Mobile number"></label>
+<div id="addressWrap"><label>Delivery address<textarea name="address" placeholder="House / flat, street, landmark"></textarea></label><button id="gpsBtn" type="button" class="location-btn">📍 Use my current location</button><small id="gpsMsg"></small></div>
+<label>Notes <span>(optional)</span><textarea name="notes" placeholder="Spice preference, allergies, special request..."></textarea></label><button class="btn primary full" type="submit">Place order on WhatsApp →</button></form></div></dialog>
+<div id="toast" class="toast"></div>
 <div class="floating-actions">
   <a class="fab call" href="tel:+918981315889" aria-label="Call Savor Cafe'">📞</a>
   <a class="fab wa" href="https://wa.me/918981315889" target="_blank" rel="noopener" aria-label="WhatsApp Savor Cafe'">💬</a>
