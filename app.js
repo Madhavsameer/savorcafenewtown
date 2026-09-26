@@ -18,11 +18,19 @@ const NONVEG_WORDS = ["chicken","mutton","fish","egg","katla","rui","prawn","mea
   const cart = {};
   const $ = sel => document.querySelector(sel);
 
-  // ---- preloader ----
-  window.addEventListener('load', () => {
-    setTimeout(() => $('#preloader').classList.add('hide'), 500);
+  // ---- preloader: one short, guaranteed branded moment — never depends on slow network/font loads ----
+  requestAnimationFrame(() => {
+    setTimeout(() => $('#preloader')?.classList.add('hide'), 650);
   });
-  setTimeout(() => $('#preloader').classList.add('hide'), 1400);
+
+  // ---- keep sticky offsets correct on notched phones (the navbar grows taller there) ----
+  function setNavHeight(){
+    const nb = document.querySelector('.navbar');
+    if (nb) document.documentElement.style.setProperty('--navh', nb.getBoundingClientRect().height + 'px');
+  }
+  setNavHeight();
+  window.addEventListener('resize', setNavHeight);
+  window.addEventListener('orientationchange', () => setTimeout(setNavHeight, 250));
 
   // ---- status pill ----
   function updateStatus(){
@@ -34,9 +42,10 @@ const NONVEG_WORDS = ["chicken","mutton","fish","egg","katla","rui","prawn","mea
   updateStatus();
 
   // ---- mobile nav toggle (defined before routing, since goTo() calls closeNav on first load) ----
-  const navLinks = $('#navLinks'), navScrim = $('#navScrim');
-  function closeNav(){ navLinks.classList.remove('open'); navScrim.classList.remove('show'); }
-  $('#navToggle').onclick = () => { navLinks.classList.add('open'); navScrim.classList.add('show'); };
+  const navLinks = $('#navLinks'), navScrim = $('#navScrim'), navToggle = $('#navToggle');
+  function closeNav(){ navLinks.classList.remove('open'); navScrim.classList.remove('show'); navToggle.setAttribute('aria-expanded','false'); navToggle.textContent='☰'; }
+  function openNav(){ navLinks.classList.add('open'); navScrim.classList.add('show'); navToggle.setAttribute('aria-expanded','true'); navToggle.textContent='✕'; setNavHeight(); }
+  navToggle.onclick = () => { navLinks.classList.contains('open') ? closeNav() : openNav(); };
   navScrim.onclick = closeNav;
 
   // ---- routing ----
@@ -47,7 +56,8 @@ const NONVEG_WORDS = ["chicken","mutton","fish","egg","katla","rui","prawn","mea
       if (a.closest('.nav-links')) a.classList.toggle('active', a.dataset.nav === name);
     });
     closeNav();
-    window.scrollTo({top:0, behavior:'instant' in document.documentElement.style ? 'instant' : 'auto'});
+    window.scrollTo(0,0);
+    setTimeout(setNavHeight, 50);
     if (location.hash.slice(1) !== name) history.replaceState(null,'','#'+name);
   }
   document.querySelectorAll('[data-nav]').forEach(a => a.addEventListener('click', e => {
@@ -177,6 +187,18 @@ const NONVEG_WORDS = ["chicken","mutton","fish","egg","katla","rui","prawn","mea
     const countEl = $('#count');
     if (countEl.textContent != count) { countEl.textContent = count; countEl.classList.remove('bump'); void countEl.offsetWidth; countEl.classList.add('bump'); }
     $('#checkout').disabled = !count;
+
+    // ---- View Cart bar: appears the moment there's at least one item ----
+    const bar = $('#viewCartBar'), fabGroup = $('#fabGroup');
+    if (count){
+      $('#vcbCount').textContent = count;
+      $('#vcbTotal').textContent = '₹' + total;
+      bar.classList.add('show');
+      fabGroup.classList.add('lift');
+    } else {
+      bar.classList.remove('show');
+      fabGroup.classList.remove('lift');
+    }
   }
 
   let toastTimer;
@@ -218,6 +240,7 @@ const NONVEG_WORDS = ["chicken","mutton","fish","egg","katla","rui","prawn","mea
   function openCart(){ cartEl.classList.add('open'); scrim.classList.add('show'); }
   function closeCartFn(){ cartEl.classList.remove('open'); scrim.classList.remove('show'); }
   $('#cartBtn').onclick = openCart;
+  $('#vcbBtn').onclick = openCart;
   $('#closeCart').onclick = closeCartFn;
   scrim.onclick = () => { closeCartFn(); $('#checkoutModal').close(); };
 
