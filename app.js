@@ -34,7 +34,7 @@ $$("#orderMode button").forEach(b=>b.addEventListener("click",()=>{$$("#orderMod
 $("#gpsBtn")?.addEventListener("click",()=>navigator.geolocation?.getCurrentPosition(p=>{$("textarea[name=address]").value=`https://www.google.com/maps?q=${p.coords.latitude},${p.coords.longitude}`;$("#gpsMsg").textContent="Location added."},()=>$("#gpsMsg").textContent="Could not access location."));
 $("#checkoutForm")?.addEventListener("submit",e=>{e.preventDefault();if(!count())return toast("Your cart is empty");window.location.href=checkoutUrl(new FormData(e.currentTarget))});
 $("#contactForm")?.addEventListener("submit",e=>{e.preventDefault();let f=new FormData(e.currentTarget);window.open(`https://wa.me/918981315889?text=${encodeURIComponent(`Hello Savor Cafe'!\n\nName: ${f.get("name")}\nPhone: ${f.get("phone")||"Not provided"}\nMessage: ${f.get("message")}`)}`,"_blank")});
-const pl=$("#preloader");if(pl){if(sessionStorage.getItem("savor_intro_seen")){pl.classList.add("hide")}else{sessionStorage.setItem("savor_intro_seen","1");setTimeout(()=>pl.classList.add("hide"),1300)}}
+const pl=$("#preloader");if(pl){if(sessionStorage.getItem("savor_intro_seen")){pl.classList.add("hide")}else{sessionStorage.setItem("savor_intro_seen","1");setTimeout(()=>pl.classList.add("hide"),3300)}}
 }
 document.addEventListener("DOMContentLoaded",setup);
 })();
