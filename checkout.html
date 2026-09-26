@@ -49,12 +49,13 @@
         <label>Phone number *<input name="phone" type="tel" inputmode="numeric" autocomplete="tel" required pattern="[0-9+ ()-]{10,}" placeholder="10-digit mobile number"></label>
       </div>
       <div id="addressWrap" class="address-wrap">
+<textarea name="address" rows="4"
         <div class="address-tools"><button id="gpsBtn" class="btn secondary" type="button">📍 Use my location</button><small id="gpsMsg">Manual address is required even if you use location.</small></div>
       </div>
 
 <div id="addressWrap" class="address-wrap">
         <label>Complete manual delivery address *<textarea name="address" rows="4" required placeholder="House/Flat No., Building, Street, Area, Landmark, New Town, Kolkata"></textarea></label>
-        <div class="address-tools"><button id="gpsBtn" class="btn secondary" type="button">📍 Use my location</button><small id="gpsMsg">Manual address is required even if you use location.</small></div>
+        <div class="address-tools"><small id="gpsMsg">Manual address is required even if you use location.</small></div>
       </div>
 
       <label>Order notes <textarea name="notes" rows="3" placeholder="Any special instructions? (optional)"></textarea></label>
