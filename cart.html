@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#17110b"><title>Cart — Savor Cafe'</title>
+<meta name="theme-color" content="#0b0d10"><title>Cart — Savor Cafe'</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css"></head><body>
@@ -15,26 +15,26 @@
       <a href="/cart.html" data-page="cart">Cart <b id="navCartCount">0</b></a>
     </nav>
     <div class="nav-actions">
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch theme" title="Switch theme">☀️</button>
       <a class="cart-btn" href="/cart.html">🛒 <span>Cart</span><b id="cartCount">0</b></a>
       <button id="navToggle" class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
     </div>
   </div>
 </header>
 <div id="navScrim" class="nav-scrim"></div>
-
-<main><section class="simple-hero"><div class="container"><span class="eyebrow">YOUR ORDER</span><h1>Your <em>cart.</em></h1><p>Review your items and place your order on WhatsApp.</p></div></section>
-<div class="container cart-page"><div id="cartPageItems"></div><div class="cart-page-total"><span>Total</span><b id="cartPageTotal">₹0</b></div><button id="checkoutBtn" class="btn primary full" type="button">Proceed to checkout →</button><a class="continue-link" href="/menu.html">← Continue shopping</a></div></main>
-<dialog id="checkoutModal"><div class="modal"><div class="modal-head"><div><span class="eyebrow">ALMOST THERE</span><h2>Complete your order</h2></div><button id="closeModal" class="close-btn" type="button">×</button></div>
-<div id="orderMode" class="order-mode"><button type="button" data-mode="delivery" class="active">🛵 Delivery</button><button type="button" data-mode="takeaway">🥡 Takeaway</button><button type="button" data-mode="dinein">🍽️ Dine-in</button></div>
-<form id="checkoutForm"><label>Name<input name="name" required placeholder="Your name"></label><label>Phone<input name="phone" required inputmode="tel" placeholder="Mobile number"></label>
-<div id="addressWrap"><label>Delivery address<textarea name="address" placeholder="House / flat, street, landmark"></textarea></label><button id="gpsBtn" type="button" class="location-btn">📍 Use my current location</button><small id="gpsMsg"></small></div>
-<label>Notes <span>(optional)</span><textarea name="notes" placeholder="Spice preference, allergies, special request..."></textarea></label><button class="btn primary full" type="submit">Place order on WhatsApp →</button></form></div></dialog>
-<div id="toast" class="toast"></div>
+<div id="preloader" class="preloader" aria-hidden="true"><div class="loader-ring"></div><div class="loader-logo"><img src="/logo.png" alt="Savor Cafe' logo" onerror="this.style.display='none'"><span>S</span></div><b>Savor Cafe'</b><small>Good food, great moments.</small></div>
+<div class="view-cart-bar" id="viewCartBar" hidden>
+  <div><span>🛒</span><b id="floatingCartCount">0 items</b><small id="floatingCartTotal">₹0</small></div>
+  <a href="/cart.html">View Cart →</a>
+</div>
 <div class="floating-actions">
   <a class="fab call" href="tel:+918981315889" aria-label="Call Savor Cafe'">📞</a>
   <a class="fab wa" href="https://wa.me/918981315889" target="_blank" rel="noopener" aria-label="WhatsApp Savor Cafe'">💬</a>
 </div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 
+<main><section class="simple-hero"><div class="container"><span class="eyebrow">YOUR ORDER</span><h1>Your <em>cart.</em></h1><p>Review your items and place your order on WhatsApp.</p></div></section>
+<div class="container cart-page"><div id="cartPageItems"></div><div class="cart-page-total"><span>Total</span><b id="cartPageTotal">₹0</b></div><a id="checkoutBtn" class="btn primary full" href="/checkout.html">Proceed to checkout →</a><a class="continue-link" href="/menu.html">← Continue shopping</a></div></main>
 <footer>
   <div class="container footer-grid">
     <div><a class="brand footer-brand" href="/index.html"><span class="brand-logo"><img src="/logo.png" alt="" onerror="this.style.display='none'"><i>S</i></span><span>Savor Cafe'</span></a><p>Tandoor, Chinese & Bengali favourites in New Town, Kolkata.</p></div>

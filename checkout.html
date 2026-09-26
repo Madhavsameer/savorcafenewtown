@@ -1,28 +1,23 @@
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#0b0d10"><title>Savor Cafe' — New Town, Kolkata</title>
+<meta name="theme-color" content="#0b0d10"><title>Checkout — Savor Cafe'</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="/style.css"></head><body>
-<header class="navbar">
-  <div class="nav-inner">
-    <a class="brand" href="/index.html"><span class="brand-logo"><img src="/logo.png" alt="" onerror="this.style.display='none'"><i>S</i></span><span>Savor Cafe'</span></a>
-    <nav id="navLinks" class="nav-links">
-      <a href="/index.html" data-page="home">Home</a>
-      <a href="/menu.html" data-page="menu">Menu</a>
-      <a href="/about.html" data-page="about">About</a>
-      <a href="/contact.html" data-page="contact">Contact</a>
-      <a href="/cart.html" data-page="cart">Cart <b id="navCartCount">0</b></a>
-    </nav>
-    <div class="nav-actions">
-      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch theme" title="Switch theme">☀️</button>
-      <a class="cart-btn" href="/cart.html">🛒 <span>Cart</span><b id="cartCount">0</b></a>
-      <button id="navToggle" class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
-    </div>
-  </div>
-</header>
-<div id="navScrim" class="nav-scrim"></div>
+<link rel="stylesheet" href="/style.css"></head><body class="checkout-page">
+<header class="navbar"><div class="nav-inner">
+<a class="brand" href="/index.html"><span class="brand-logo"><img src="/logo.png" alt="" onerror="this.style.display='none'"><i>S</i></span><span>Savor Cafe'</span></a>
+<nav id="navLinks" class="nav-links"><a href="/index.html" data-page="home">Home</a><a href="/menu.html" data-page="menu">Menu</a><a href="/about.html" data-page="about">About</a><a href="/contact.html" data-page="contact">Contact</a><a href="/cart.html" data-page="cart">Cart <b id="navCartCount">0</b></a></nav>
+<div class="nav-actions"><button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch theme" title="Switch theme">☀️</button><a class="cart-btn" href="/cart.html">🛒 <span>Cart</span><b id="cartCount">0</b></a><button id="navToggle" class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">☰</button></div></div></header><div id="navScrim" class="nav-scrim"></div>
 <div id="preloader" class="preloader" aria-hidden="true"><div class="loader-ring"></div><div class="loader-logo"><img src="/logo.png" alt="Savor Cafe' logo" onerror="this.style.display='none'"><span>S</span></div><b>Savor Cafe'</b><small>Good food, great moments.</small></div>
+<main><section class="simple-hero"><div class="container"><span class="eyebrow">SECURE YOUR ORDER</span><h1>Final <em>step.</em></h1><p>Choose how you want to receive your food and send the order directly to Savor Cafe' on WhatsApp.</p></div></section>
+<div class="container checkout-layout">
+<section class="checkout-card"><div class="checkout-head"><div><span class="eyebrow">YOUR DETAILS</span><h2>Complete your order</h2></div><a href="/cart.html">← Back to cart</a></div>
+<div id="orderMode" class="order-mode"><button type="button" data-mode="delivery" class="active">🛵 Delivery</button><button type="button" data-mode="takeaway">🥡 Takeaway</button><button type="button" data-mode="dinein">🍽️ Dine-in</button></div>
+<form id="checkoutForm"><label>Name<input name="name" required placeholder="Your name" autocomplete="name"></label><label>Phone<input name="phone" required inputmode="tel" placeholder="Mobile number" autocomplete="tel"></label>
+<div id="addressWrap"><label>Delivery address<textarea name="address" placeholder="House / flat, street, landmark"></textarea></label><button id="gpsBtn" type="button" class="location-btn">📍 Use my current location</button><small id="gpsMsg"></small></div>
+<label>Notes <span>(optional)</span><textarea name="notes" placeholder="Spice preference, allergies, special request..."></textarea></label><button class="btn primary full" type="submit">Place order on WhatsApp →</button></form></section>
+<aside class="checkout-summary"><span class="eyebrow">ORDER SUMMARY</span><h2>Your order</h2><div id="checkoutItems"></div><div class="checkout-total"><span>Total</span><b id="checkoutTotal">₹0</b></div><a href="/menu.html" class="continue-link">+ Add more items</a></aside>
+</div></main>
 <div class="view-cart-bar" id="viewCartBar" hidden>
   <div><span>🛒</span><b id="floatingCartCount">0 items</b><small id="floatingCartTotal">₹0</small></div>
   <a href="/cart.html">View Cart →</a>
@@ -32,39 +27,7 @@
   <a class="fab wa" href="https://wa.me/918981315889" target="_blank" rel="noopener" aria-label="WhatsApp Savor Cafe'">💬</a>
 </div>
 <div id="toast" class="toast" role="status" aria-live="polite"></div>
-
-<main>
-<section class="hero">
-<div class="hero-glow"></div><div class="hero-inner">
-<div class="hero-copy"><span class="eyebrow">HOTEL & RESTAURANT · NEW TOWN</span>
-<h1>Good food,<br><em>great moments.</em></h1>
-<p>Tandoor, Chinese & Bengali favourites made fresh for New Town, Kolkata.</p>
-<div class="hero-buttons"><a class="btn primary" href="/menu.html">Explore Menu →</a><a class="btn whatsapp" href="https://wa.me/918981315889" target="_blank">WhatsApp Order</a></div>
-<div class="hero-meta"><span class="status"><i id="statusDot"></i><b id="statusText">Checking...</b></span><span>11 AM – 11 PM · Daily</span></div>
-</div>
-<div class="hero-card"><div class="hero-card-top">CHEF'S PICK <strong>🔥</strong></div><div class="hero-card-art">🍗</div><h3>Butter Chicken</h3><p>Rich, creamy & full of flavour</p><strong class="price">₹169</strong></div>
-</div></section>
-<div class="container">
-<section class="feature-grid">
-<article><span>🔥</span><div><b>Fresh from the kitchen</b><p>Prepared fresh when you order.</p></div></article>
-<article><span>🛵</span><div><b>Delivery & takeaway</b><p>Easy ordering for every craving.</p></div></article>
-<article><span>💬</span><div><b>No app required</b><p>Build your order and confirm on WhatsApp.</p></div></article>
-</section>
-<section class="section-block"><div class="section-head"><div><span class="eyebrow">DISCOVER</span><h2>Explore our menu</h2></div><a href="/menu.html">View all →</a></div>
-<div id="homeCats" class="category-grid"></div></section>
-<section class="section-block"><div class="section-head"><div><span class="eyebrow">FAVOURITES</span><h2>Popular dishes</h2></div><a href="/menu.html">Full menu →</a></div><div id="homePopular" class="popular-grid"></div></section>
-<section class="cta"><div><span class="eyebrow">READY TO EAT?</span><h2>Your next favourite meal is one tap away.</h2><p>Choose your dishes and send the order directly on WhatsApp.</p></div><a class="btn primary" href="/menu.html">Start your order →</a></section>
-</div></main>
-<footer>
-  <div class="container footer-grid">
-    <div><a class="brand footer-brand" href="/index.html"><span class="brand-logo"><img src="/logo.png" alt="" onerror="this.style.display='none'"><i>S</i></span><span>Savor Cafe'</span></a><p>Tandoor, Chinese & Bengali favourites in New Town, Kolkata.</p></div>
-    <div><b>Explore</b><a href="/index.html">Home</a><a href="/menu.html">Menu</a><a href="/about.html">About</a><a href="/contact.html">Contact</a></div>
-    <div><b>Contact</b><a href="tel:+918981315889">8981315889</a><a href="tel:+919456411230">9456411230</a><a href="https://wa.me/918981315889" target="_blank">WhatsApp</a></div>
-    <div><b>Visit</b><a target="_blank" href="https://www.google.com/maps/search/?api=1&query=Savor+Cafe+New+Town+Kolkata">ADD-DB, Market 8 No, Tank, New Town</a><span>11 AM – 11 PM · Daily</span></div>
-  </div>
-  <div class="container footer-bottom"><span>© 2026 Savor Cafe'</span><span>Come hungry, leave happy.</span></div>
-</footer>
-
+<footer><div class="container footer-grid"><div><a class="brand footer-brand" href="/index.html"><span class="brand-logo"><img src="/logo.png" alt="" onerror="this.style.display='none'"><i>S</i></span><span>Savor Cafe'</span></a><p>Tandoor, Chinese & Bengali favourites in New Town, Kolkata.</p></div><div><b>Explore</b><a href="/index.html">Home</a><a href="/menu.html">Menu</a><a href="/about.html">About</a><a href="/contact.html">Contact</a></div><div><b>Contact</b><a href="tel:+918981315889">8981315889</a><a href="tel:+919456411230">9456411230</a><a href="https://wa.me/918981315889" target="_blank">WhatsApp</a></div><div><b>Visit</b><a target="_blank" href="https://www.google.com/maps/search/?api=1&query=Savor+Cafe+New+Town+Kolkata">ADD-DB, Market 8 No, Tank, New Town</a><span>11 AM – 11 PM · Daily</span></div></div><div class="container footer-bottom"><span>© 2026 Savor Cafe'</span><span>Come hungry, leave happy.</span></div></footer>
 <script>window.MENU_PRODUCTS=[
 {"id":1,"name":"Veg Pakora","price":149,"category":"starters"},{"id":2,"name":"Paneer Pakora","price":179,"category":"starters"},{"id":3,"name":"Veg Fingers","price":149,"category":"starters"},{"id":4,"name":"French Fries","price":109,"category":"starters"},{"id":5,"name":"Chilli Babycorn","price":169,"category":"starters"},{"id":6,"name":"Mushroom Chilli","price":179,"category":"starters"},{"id":7,"name":"Pepper Chicken (6 pcs)","price":179,"category":"starters"},{"id":8,"name":"Chicken Lollipop","price":169,"category":"starters"},{"id":9,"name":"Crispy Chicken","price":179,"category":"starters"},{"id":10,"name":"Crispy Chilli Chicken","price":189,"category":"starters"},{"id":11,"name":"Chicken Bone Roast","price":210,"category":"starters"},{"id":12,"name":"Chicken Popcorn","price":179,"category":"starters"},{"id":13,"name":"Chicken Nuggets","price":159,"category":"starters"},{"id":14,"name":"Chicken Cheese Roast","price":199,"category":"starters"},{"id":15,"name":"Butter Fried Kebab","price":210,"category":"starters"},{"id":16,"name":"Reshmi Cheese Kebab","price":210,"category":"tandoor"},{"id":17,"name":"Tikka Kebab","price":179,"category":"tandoor"},{"id":18,"name":"Tangri Kebab","price":189,"category":"tandoor"},{"id":19,"name":"Hariyali Kebab","price":189,"category":"tandoor"},{"id":20,"name":"Tandoori Chicken Full","price":450,"category":"tandoor"},{"id":21,"name":"Tandoori Chicken Half","price":250,"category":"tandoor"},{"id":22,"name":"Tandoori Boti","price":199,"category":"tandoor"},{"id":23,"name":"Paneer Malai Kebab","price":210,"category":"tandoor"},{"id":24,"name":"Paneer Tikka","price":199,"category":"tandoor"},{"id":25,"name":"Broccoli Malai Kebab","price":249,"category":"tandoor"},{"id":26,"name":"Aloo Tandoori","price":189,"category":"tandoor"},{"id":27,"name":"Chicken Reshmi Masala","price":189,"category":"tandoor"},{"id":28,"name":"Tikka Butter Masala","price":179,"category":"tandoor"},{"id":29,"name":"Tandoori Masala","price":210,"category":"tandoor"},{"id":30,"name":"Butter Chicken","price":169,"category":"tandoor"},{"id":31,"name":"Chicken Kosha","price":169,"category":"tandoor"},{"id":32,"name":"Chicken Curry","price":159,"category":"tandoor"},{"id":33,"name":"Kadai Chicken","price":169,"category":"tandoor"},{"id":34,"name":"Chicken Bharta","price":189,"category":"tandoor"},{"id":35,"name":"Dhaba Chicken","price":179,"category":"tandoor"},{"id":36,"name":"Egg Noodles","price":149,"category":"noodles"},{"id":37,"name":"Chicken Egg Noodles","price":159,"category":"noodles"},{"id":38,"name":"Mix Noodles","price":179,"category":"noodles"},{"id":39,"name":"Chicken Gravy Noodles","price":179,"category":"noodles"},{"id":40,"name":"Paneer Chilli","price":169,"category":"chinese"},{"id":41,"name":"Veg Manchurian","price":159,"category":"chinese"},{"id":42,"name":"Mushroom Chilli Gravy","price":169,"category":"chinese"},{"id":43,"name":"Chilli Chicken","price":159,"category":"chinese"},{"id":44,"name":"Chicken Manchurian","price":169,"category":"chinese"},{"id":45,"name":"Garlic Chicken","price":169,"category":"chinese"},{"id":46,"name":"Honey Chicken","price":179,"category":"chinese"},{"id":47,"name":"Veg Soup","price":119,"category":"soup"},{"id":48,"name":"Chicken Clear Soup","price":119,"category":"soup"},{"id":49,"name":"Chicken Manchow Soup","price":139,"category":"soup"},{"id":50,"name":"Chicken Hot & Sour Soup","price":149,"category":"soup"},{"id":51,"name":"Fish Fingers","price":179,"category":"seafood"},{"id":52,"name":"Fish Fry","price":189,"category":"seafood"},{"id":53,"name":"Fish Chilli","price":210,"category":"seafood"},{"id":54,"name":"Rui Fish Curry","price":169,"category":"seafood"},{"id":55,"name":"Katla Fish Curry","price":179,"category":"seafood"},{"id":56,"name":"Green Salad","price":79,"category":"salad"},{"id":57,"name":"Cold Drinks (250ml)","price":30,"category":"salad"},{"id":58,"name":"Veg Raita","price":79,"category":"salad"},{"id":59,"name":"Water (500ml)","price":10,"category":"salad"},{"id":60,"name":"Roti (4pcs) + Chicken Kosha","price":179,"category":"combo"},{"id":61,"name":"Roti + Chicken Bharta","price":179,"category":"combo"},{"id":62,"name":"Paratha (2pcs) + Chicken Masala","price":180,"category":"combo"},{"id":63,"name":"Lachha Paratha + Chicken Roast","price":199,"category":"combo"},{"id":64,"name":"Rice + Chicken Curry","price":210,"category":"combo"},{"id":65,"name":"Paneer Chilli Rice","price":169,"category":"combo"},{"id":66,"name":"Veg Fried Rice","price":149,"category":"combo"},{"id":67,"name":"Chilli Chicken + Fried Rice","price":169,"category":"combo"},{"id":68,"name":"Manchurian Rice","price":179,"category":"combo"},{"id":69,"name":"Mix Veg","price":159,"category":"veg"},{"id":70,"name":"Paneer Butter Masala","price":169,"category":"veg"},{"id":71,"name":"Mushroom Masala","price":179,"category":"veg"},{"id":72,"name":"Paneer Tikka Masala","price":189,"category":"veg"},{"id":73,"name":"Aloo Dum","price":149,"category":"veg"},{"id":74,"name":"Aloo Matar","price":139,"category":"veg"},{"id":75,"name":"Aloo Bhindi","price":159,"category":"veg"},{"id":76,"name":"Yellow Dal Fry","price":110,"category":"veg"},{"id":77,"name":"Yellow Dal Tadka","price":130,"category":"veg"},{"id":78,"name":"Dal Makhani","price":149,"category":"veg"},{"id":79,"name":"Rajma Masala","price":159,"category":"veg"},{"id":80,"name":"Plain Paratha","price":25,"category":"roti"},{"id":81,"name":"Lachha Paratha","price":35,"category":"roti"},{"id":82,"name":"Aloo Paratha","price":50,"category":"roti"},{"id":83,"name":"Tandoori Roti","price":25,"category":"roti"},{"id":84,"name":"Butter Naan","price":45,"category":"roti"},{"id":85,"name":"Masala Kulcha","price":69,"category":"roti"},{"id":86,"name":"Chicken Biryani","price":149,"category":"biryani"},{"id":87,"name":"Egg Biryani","price":110,"category":"biryani"},{"id":88,"name":"Mutton Biryani","price":210,"category":"biryani"},{"id":89,"name":"Veg Khichuri","price":169,"category":"biryani"},{"id":90,"name":"Mutton Khichuri","price":219,"category":"biryani"},{"id":91,"name":"Basmati Plain Rice","price":99,"category":"rice"},{"id":92,"name":"Veg Pulao","price":130,"category":"rice"},{"id":93,"name":"Jira Rice","price":110,"category":"rice"},{"id":94,"name":"Mutton Kosha (4pcs)","price":230,"category":"rice"},{"id":95,"name":"Mutton Aloo Curry","price":219,"category":"rice"},{"id":96,"name":"Mutton Handi","price":230,"category":"rice"},{"id":97,"name":"Mutton Chap","price":259,"category":"rice"},{"id":98,"name":"Veg Fried Rice","price":139,"category":"rice"},{"id":99,"name":"Chicken Fried Rice","price":149,"category":"rice"},{"id":100,"name":"Egg Chicken Rice","price":159,"category":"rice"},{"id":101,"name":"Mix Fried Rice","price":179,"category":"rice"},{"id":102,"name":"Schezwan Chicken Rice","price":159,"category":"rice"},{"id":103,"name":"Veg Noodles","price":139,"category":"noodles"}
 ];</script><script src="/app.js"></script></body></html>

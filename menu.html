@@ -1,6 +1,6 @@
 <!doctype html><html lang="en"><head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="theme-color" content="#17110b"><title>Menu — Savor Cafe'</title>
+<meta name="theme-color" content="#0b0d10"><title>Menu — Savor Cafe'</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="/style.css"></head><body>
@@ -15,12 +15,23 @@
       <a href="/cart.html" data-page="cart">Cart <b id="navCartCount">0</b></a>
     </nav>
     <div class="nav-actions">
+      <button id="themeToggle" class="theme-toggle" type="button" aria-label="Switch theme" title="Switch theme">☀️</button>
       <a class="cart-btn" href="/cart.html">🛒 <span>Cart</span><b id="cartCount">0</b></a>
       <button id="navToggle" class="nav-toggle" type="button" aria-label="Open menu" aria-expanded="false">☰</button>
     </div>
   </div>
 </header>
 <div id="navScrim" class="nav-scrim"></div>
+<div id="preloader" class="preloader" aria-hidden="true"><div class="loader-ring"></div><div class="loader-logo"><img src="/logo.png" alt="Savor Cafe' logo" onerror="this.style.display='none'"><span>S</span></div><b>Savor Cafe'</b><small>Good food, great moments.</small></div>
+<div class="view-cart-bar" id="viewCartBar" hidden>
+  <div><span>🛒</span><b id="floatingCartCount">0 items</b><small id="floatingCartTotal">₹0</small></div>
+  <a href="/cart.html">View Cart →</a>
+</div>
+<div class="floating-actions">
+  <a class="fab call" href="tel:+918981315889" aria-label="Call Savor Cafe'">📞</a>
+  <a class="fab wa" href="https://wa.me/918981315889" target="_blank" rel="noopener" aria-label="WhatsApp Savor Cafe'">💬</a>
+</div>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
 
 <main>
 <section class="menu-hero"><div class="container"><span class="eyebrow">SAVOR CAFE' MENU</span><h1>Something for<br><em>every craving.</em></h1><p>Search, browse by category and add dishes to your cart.</p><div class="legend"><span><i class="veg-dot"></i> Veg</span><span><i class="nonveg-dot"></i> Non-veg</span></div></div></section>
@@ -28,11 +39,6 @@
 <div class="search-box"><span>⌕</span><input id="search" type="search" placeholder="Search chicken, paneer, biryani..." autocomplete="off"><button id="searchClear" type="button">×</button></div>
 <div id="cats" class="category-tabs"></div><div id="menuMount"></div><div id="emptyState" class="empty-state" hidden><div>🍽️</div><h3>No dishes found</h3><p>Try another search or category.</p></div>
 </div></main>
-<div class="floating-actions">
-  <a class="fab call" href="tel:+918981315889" aria-label="Call Savor Cafe'">📞</a>
-  <a class="fab wa" href="https://wa.me/918981315889" target="_blank" rel="noopener" aria-label="WhatsApp Savor Cafe'">💬</a>
-</div>
-
 <footer>
   <div class="container footer-grid">
     <div><a class="brand footer-brand" href="/index.html"><span class="brand-logo"><img src="/logo.png" alt="" onerror="this.style.display='none'"><i>S</i></span><span>Savor Cafe'</span></a><p>Tandoor, Chinese & Bengali favourites in New Town, Kolkata.</p></div>
