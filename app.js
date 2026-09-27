@@ -52,7 +52,7 @@ function showWhatsAppConfirmation(){
       const pending=readJSON("savor_cafe_pending_order",null);
       if(!pending){toast("No pending order found");modal.remove();return}
       const fd=new FormData();Object.entries(pending.form||{}).forEach(([k,v])=>fd.append(k,v));
-      currentMode=pending.mode||"delivery";cart=pending.cart||{};recordLocalOrder(fd,pending.details);
+      currentMode=pending.mode||"delivery";cart=pending.cart||{}; if (!recordLocalOrder(fd,pending.details)) { toast("Please sign in again before confirming the order"); return; }
       localStorage.setItem("savor_cafe_last_order",JSON.stringify(pending.details));
       localStorage.removeItem("savor_cafe_pending_order");
       cart={};save();modal.remove();location.href="/orders.html";
@@ -104,14 +104,23 @@ function readJSON(key, fallback) {
 function writeJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
 function normalizePhone(v) { return String(v || "").replace(/\D/g, "").slice(-10); }
 function getUsers() { return readJSON(AUTH_USERS_KEY, []); }
+function getCurrentUser() { return readJSON(AUTH_CURRENT_KEY, null); }
+function userPhone(user) { return normalizePhone(user?.phone || user?.mobile || user?.whatsapp || user?.number || ""); }
+function orderPhone(order) { return normalizePhone(order?.phone || order?.mobile || order?.whatsapp || order?.customerPhone || ""); }
 function getOrders() { return readJSON(AUTH_ORDERS_KEY, []); }
 function migrateLegacyOrders() {
   const legacy=readJSON("savor_cafe_orders_v1", []);
   const current=getOrders();
-  if (legacy.length && !current.length) writeJSON(AUTH_ORDERS_KEY, legacy);
+  if (!legacy.length) return;
+  const seen=new Set(current.map(o=>String(o.orderNumber || o.id || o.createdAt || "")));
+  const merged=[...current];
+  legacy.forEach(o=>{
+    const key=String(o.orderNumber || o.id || o.createdAt || "");
+    if (!seen.has(key)) { merged.push(o); seen.add(key); }
+  });
+  writeJSON(AUTH_ORDERS_KEY, merged);
 }
 migrateLegacyOrders();
-function getCurrentUser() { return readJSON(AUTH_CURRENT_KEY, null); }
 function setCurrentUser(user) { user ? writeJSON(AUTH_CURRENT_KEY, user) : localStorage.removeItem(AUTH_CURRENT_KEY); }
 function customerOrSignup() {
   if (!getCurrentUser()) {
@@ -136,31 +145,27 @@ function downloadExcel(filename, rows, columns) {
 
 function recordLocalOrder(fd, orderDetails) {
   const u = getCurrentUser();
-  if (!u) return;
+  if (!u) return false;
   const mode = currentMode === "delivery" ? "Delivery" : currentMode === "takeaway" ? "Takeaway" : "Dine-in";
   const items = Object.entries(cart).map(([id, qty]) => {
     const p = products.find(x => x.id == id);
-    return p ? {name:p.name, qty, amount:p.price * qty} : null;
+    return p ? {name:p.name, qty:Number(qty), amount:p.price * Number(qty)} : null;
   }).filter(Boolean);
   const now = new Date();
+  const phone = userPhone(u) || normalizePhone(fd.get("phone"));
   const orders = getOrders();
-  orders.push({
-    orderNumber: orderDetails.orderNumber,
-    orderDate: orderDetails.orderDate || orderDetails.date,
-    orderTime: orderDetails.orderTime || orderDetails.time,
-    isoDate: now.toLocaleDateString("en-CA"),
-    createdAt: now.toISOString(),
-    name: u.name,
-    phone: u.phone,
-    type: mode,
+  const order = {
+    id: "O" + Date.now(), userId: u.id || "", orderNumber: orderDetails.orderNumber,
+    orderDate: orderDetails.orderDate || orderDetails.date, orderTime: orderDetails.orderTime || orderDetails.time,
+    isoDate: now.toLocaleDateString("en-CA"), createdAt: now.toISOString(),
+    name: u.name || String(fd.get("name") || "Customer"), phone, type: mode,
     address: currentMode === "delivery" ? String(fd.get("address") || "") : "",
     gpsLocation: currentMode === "delivery" ? String(fd.get("gpsLocation") || "") : "",
-    notes: String(fd.get("notes") || ""),
-    items,
-    total: total(),
-    status: "Placed"
-  });
+    notes: String(fd.get("notes") || ""), items, total: total(), status: "Placed"
+  };
+  if (!orders.some(o => String(o.orderNumber) === String(order.orderNumber))) orders.push(order);
   writeJSON(AUTH_ORDERS_KEY, orders);
+  return true;
 }
 
 function renderCustomerHeader() {
@@ -222,19 +227,25 @@ function staticAuthSetup() {
   if (path === "profile.html") {
     if (!customerOrSignup()) return;
     const u = getCurrentUser();
+    const phone = userPhone(u);
     $("#profileName") && ($("#profileName").textContent = u.name);
-    $("#profilePhone") && ($("#profilePhone").textContent = "+91 " + u.phone);
+    $("#profilePhone") && ($("#profilePhone").textContent = phone ? "+91 " + phone : "");
     $("#profileInitial") && ($("#profileInitial").textContent = u.name.charAt(0).toUpperCase());
-    $("#profileOrdersCount") && ($("#profileOrdersCount").textContent = getOrders().filter(o => normalizePhone(o.phone) === normalizePhone(u.phone)).length);
+    $("#profileOrdersCount") && ($("#profileOrdersCount").textContent = getOrders().filter(o => (u.id && o.userId && String(o.userId) === String(u.id)) || (phone && phone === orderPhone(o))).length);
     $("#logoutBtn")?.addEventListener("click", () => { setCurrentUser(null); location.href="/index.html"; });
   }
 
   if (path === "orders.html") {
     if (!customerOrSignup()) return;
     const u = getCurrentUser();
-    const mine = getOrders().filter(o => normalizePhone(o.phone) === normalizePhone(u.phone)).sort((a,b) => String(b.createdAt||"").localeCompare(String(a.createdAt||"")));
+    const phone = userPhone(u);
+    const mine = getOrders().filter(o => {
+      const sameUser = u.id && o.userId && String(o.userId) === String(u.id);
+      const samePhone = phone && orderPhone(o) && phone === orderPhone(o);
+      return sameUser || samePhone;
+    }).sort((a,b) => String(b.createdAt||"").localeCompare(String(a.createdAt||"")));
     const box = $("#ordersList");
-    $("#ordersPhone") && ($("#ordersPhone").textContent = "+91 " + u.phone);
+    if ($("#ordersPhone")) $("#ordersPhone").textContent = phone ? "+91 " + phone : (u.name || "your account");
     if (box) box.innerHTML = mine.length ? mine.map(o => `
       <article class="order-card">
         <div class="order-card-top"><div><span class="eyebrow">ORDER</span><h3>#${esc(o.orderNumber)}</h3></div><span class="order-status">${esc(o.status || "Placed")}</span></div>
