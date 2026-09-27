@@ -437,3 +437,24 @@ body.cart-page #viewCartBar, body.checkout-page #viewCartBar{display:none!import
   .nav-scrim{z-index:5002!important;pointer-events:none!important}
   .nav-scrim.show{display:block!important;pointer-events:auto!important}
 }
+
+
+/* =========================================================
+   FINAL REFACTOR OVERRIDES — checkout, navigation, orders
+========================================================= */
+.mode-hint{margin:8px 0 16px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--muted);font-size:12px;line-height:1.5}
+#dineInWrap[hidden],#addressWrap[hidden]{display:none!important}
+.order-mode button{cursor:pointer;touch-action:manipulation}
+.order-mode button:focus-visible,.address-choice-btn:focus-visible,.nav-toggle:focus-visible,.nav-links a:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+.order-map{display:inline-block;margin:0 0 12px;color:var(--gold);font-weight:700;font-size:13px}
+.order-notes{color:var(--muted);font-size:13px}
+.whatsapp-confirm-overlay{z-index:10000!important}
+.whatsapp-confirm-card{max-height:calc(100dvh - 40px);overflow:auto}
+@media(max-width:760px){
+  .order-mode{grid-template-columns:1fr 1fr 1fr!important}
+  .order-mode button{min-height:48px}
+  .mode-hint{font-size:12px}
+}
+@media(max-width:420px){
+  .order-mode{grid-template-columns:1fr!important}
+}

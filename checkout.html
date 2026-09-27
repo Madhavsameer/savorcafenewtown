@@ -40,6 +40,7 @@
       <button type="button" data-mode="takeaway">🥡 Takeaway</button>
       <button type="button" data-mode="dinein">🍽️ Dine-in</button>
     </div>
+    <p id="orderModeHint" class="mode-hint" aria-live="polite">Delivery selected — complete manual address is compulsory.</p>
     <form id="checkoutForm" novalidate>
       <div class="form-grid">
         <label>Full name *<input name="name" type="text" autocomplete="name" required placeholder="Your full name"></label>
@@ -53,6 +54,9 @@
         <label>Complete manual delivery address *<textarea name="address" rows="4" required placeholder="House/Flat No., Building, Street, Area, Landmark, New Town, Kolkata"></textarea></label>
         <input id="gpsLocation" name="gpsLocation" type="hidden">
         <div class="address-tools"><small id="gpsMsg">Manual address is compulsory. GPS will capture your live location as an additional map link.</small></div>
+      </div>
+      <div id="dineInWrap" hidden>
+        <label>Table number <span>(optional)</span><input name="tableNumber" type="text" inputmode="numeric" placeholder="e.g. 12"></label>
       </div>
       <label>Order notes <textarea name="notes" rows="3" placeholder="Any special instructions? (optional)"></textarea></label>
       <button class="btn primary full" type="submit">Order Now →</button>
