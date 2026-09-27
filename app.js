@@ -112,7 +112,27 @@ function setup(){
   window.addEventListener("pageshow",close);
 }
 
-const oldSetup=setup;const wrappedSetup=()=>{oldSetup();initGallery();initReviews()};document.removeEventListener("DOMContentLoaded",setup);document.addEventListener("DOMContentLoaded",wrappedSetup);
+const oldSetup=setup;
+const hidePreloader=()=>{
+  const preloader=document.getElementById("preloader");
+  if(preloader){
+    preloader.classList.add("hide");
+    preloader.setAttribute("aria-hidden","true");
+    window.setTimeout(()=>preloader.remove(),550);
+  }
+};
+const wrappedSetup=()=>{
+  try {
+    oldSetup();
+    if(typeof initGallery === "function") initGallery();
+    if(typeof initReviews === "function") initReviews();
+  } catch(err) {
+    console.error("Savor Cafe initialization error:", err);
+  } finally {
+    hidePreloader();
+  }
+};
+document.addEventListener("DOMContentLoaded",wrappedSetup,{once:true});
 
 /* =========================================================
    STATIC CUSTOMER AUTH + LOCAL ORDER BOOK
