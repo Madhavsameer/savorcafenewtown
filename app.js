@@ -19,7 +19,7 @@ function renderHome(){const c=$("#homeCats");if(c)c.innerHTML=order.map(k=>`<a c
 function emoji(p){if(!p)return"🍽️";if(/biryani|rice|khichuri|pulao/i.test(p.name))return"🍚";if(/noodle|manchurian|chilli|fried rice/i.test(p.name))return"🍜";if(/fish|katla|rui|prawn/i.test(p.name))return"🐟";if(/paneer|veg|dal|aloo|mushroom|broccoli|rajma|roti|naan|paratha/i.test(p.name))return"🥘";return"🍗"}
 function renderMenu(){const mount=$("#menuMount");if(!mount)return;const q=($("#search")?.value||"").trim().toLowerCase(),groups=activeCategory==="all"?order:[activeCategory];let html="",seen=0;groups.forEach(k=>{let list=products.filter(p=>p.category===k&&(!q||p.name.toLowerCase().includes(q)));if(!list.length)return;seen+=list.length;html+=`<section class="menu-section" id="cat-${k}"><h2>${categories[k][0]} ${categories[k][1]} <span>${list.length} dishes</span></h2><div class="menu-grid">${list.map(p=>`<article class="menu-item"><div class="item-info"><i class="food-dot ${p.veg?"":"nonveg"}"></i><div><div class="item-name">${esc(p.name)}</div><div class="item-price">${money(p.price)}</div></div></div>${cart[p.id]?stepper(p.id):`<button class="add-button" data-add="${p.id}">+ Add</button>`}</article>`).join("")}</div></section>`});mount.innerHTML=html;if($("#emptyState"))$("#emptyState").hidden=seen!==0}
 function renderTabs(){let e=$("#cats");if(!e)return;e.innerHTML=`<button class="category-tab ${activeCategory==="all"?"active":""}" data-cat="all">All</button>`+order.map(k=>`<button class="category-tab ${activeCategory===k?"active":""}" data-cat="${k}">${categories[k][0]} ${categories[k][1]}</button>`).join("")}
-function renderCartPage(){let box=$("#cartPageItems");if(!box)return;let ids=Object.keys(cart).map(Number);box.innerHTML=ids.length?ids.map(id=>{let p=products.find(x=>x.id===id);return p?`<div class="cart-page-line"><div><b>${esc(p.name)}</b><small>${money(p.price)} each</small></div><div><strong>${money(p.price*(cart[id]||0))}</strong>${stepper(id)}<button class="remove" data-remove="${id}">Remove</button></div></div>`:""}).join(""):`<div class="cart-empty"><div>🛒</div><h2>Your cart is empty</h2><p>Add some dishes first.</p><a class="btn primary" href="/menu.html">Browse menu →</a></div>`;if($("#cartPageTotal"))$("#cartPageTotal").textContent=money(total());if($("#checkoutBtn"))$("#checkoutBtn").classList.toggle("disabled",!ids.length)}
+function renderCartPage(){let box=$("#cartPageItems");if(!box)return;let ids=Object.keys(cart).map(Number);box.innerHTML=ids.length?ids.map(id=>{let p=products.find(x=>x.id===id);return p?`<div class="cart-page-line"><div><b>${esc(p.name)}</b><small>${money(p.price)} each</small></div><div><strong>${money(p.price*(cart[id]||0))}</strong>${stepper(id)}<button class="remove" data-remove="${id}">Remove</button></div></div>`:""}).join(""):`<div class="cart-empty"><div>🛒</div><h2>Your cart is empty</h2><p>Add some dishes first.</p><a class="btn primary" href="/menu.html">Browse menu →</a></div>`;if($("#cartPageTotal"))$("#cartPageTotal").textContent=money(total());if($("#checkoutBtn")){ const b=$("#checkoutBtn"); b.classList.toggle("disabled",!ids.length); b.onclick=(e)=>{ if(!ids.length){e.preventDefault();return;} if(!getCurrentUser()){e.preventDefault();sessionStorage.setItem("savor_auth_next","/checkout.html");location.href="/signup.html?next="+encodeURIComponent("/checkout.html");} }; }}
 function renderCheckout(){let box=$("#checkoutItems");if(!box)return;let ids=Object.keys(cart).map(Number);if(!ids.length){box.innerHTML=`<div class="checkout-empty">Your cart is empty.<br><a href="/menu.html">Browse menu →</a></div>`;$("#checkoutTotal").textContent="₹0";$("#checkoutForm")?.querySelector("button[type=submit]")?.setAttribute("disabled","");return}box.innerHTML=ids.map(id=>{let p=products.find(x=>x.id===id);return p?`<div class="summary-line"><span>${esc(p.name)} <b>× ${cart[id]}</b></span><strong>${money(p.price*cart[id])}</strong></div>`:""}).join("");$("#checkoutTotal").textContent=money(total())}
 function renderAll(){renderNav();renderHome();renderTabs();renderMenu();renderCartPage();renderCheckout()}
 function status(){let m=new Date().getHours()*60+new Date().getMinutes(),o=m>=660&&m<1380;if($("#statusText"))$("#statusText").textContent=o?"Open now":"Closed · Opens 11 AM";if($("#statusDot"))$("#statusDot").classList.toggle("closed",!o)}
@@ -86,6 +86,12 @@ function writeJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)
 function normalizePhone(v) { return String(v || "").replace(/\D/g, "").slice(-10); }
 function getUsers() { return readJSON(AUTH_USERS_KEY, []); }
 function getOrders() { return readJSON(AUTH_ORDERS_KEY, []); }
+function migrateLegacyOrders() {
+  const legacy=readJSON("savor_cafe_orders_v1", []);
+  const current=getOrders();
+  if (legacy.length && !current.length) writeJSON(AUTH_ORDERS_KEY, legacy);
+}
+migrateLegacyOrders();
 function getCurrentUser() { return readJSON(AUTH_CURRENT_KEY, null); }
 function setCurrentUser(user) { user ? writeJSON(AUTH_CURRENT_KEY, user) : localStorage.removeItem(AUTH_CURRENT_KEY); }
 function customerOrSignup() {
@@ -173,7 +179,7 @@ function staticAuthSetup() {
       if (name.length < 2) { msg.textContent = "Please enter your full name."; return; }
       if (phone.length !== 10) { msg.textContent = "Please enter a valid 10-digit mobile number."; return; }
       const users = getUsers();
-      if (users.some(u => u.phone === phone)) { msg.textContent = "This mobile number already exists. Please login."; return; }
+      if (users.some(u => normalizePhone(u.phone) === phone)) { msg.textContent = "This mobile number already exists. Please login."; return; }
       const newUser = {id:"U" + Date.now(), name, phone, createdAt:new Date().toISOString()};
       users.push(newUser); writeJSON(AUTH_USERS_KEY, users); setCurrentUser(newUser);
       const next = new URLSearchParams(location.search).get("next") || "/profile.html";
@@ -200,14 +206,14 @@ function staticAuthSetup() {
     $("#profileName") && ($("#profileName").textContent = u.name);
     $("#profilePhone") && ($("#profilePhone").textContent = "+91 " + u.phone);
     $("#profileInitial") && ($("#profileInitial").textContent = u.name.charAt(0).toUpperCase());
-    $("#profileOrdersCount") && ($("#profileOrdersCount").textContent = getOrders().filter(o => o.phone === u.phone).length);
+    $("#profileOrdersCount") && ($("#profileOrdersCount").textContent = getOrders().filter(o => normalizePhone(o.phone) === normalizePhone(u.phone)).length);
     $("#logoutBtn")?.addEventListener("click", () => { setCurrentUser(null); location.href="/index.html"; });
   }
 
   if (path === "orders.html") {
     if (!customerOrSignup()) return;
     const u = getCurrentUser();
-    const mine = getOrders().filter(o => o.phone === u.phone).sort((a,b) => b.createdAt.localeCompare(a.createdAt));
+    const mine = getOrders().filter(o => normalizePhone(o.phone) === normalizePhone(u.phone)).sort((a,b) => String(b.createdAt||"").localeCompare(String(a.createdAt||"")));
     const box = $("#ordersList");
     $("#ordersPhone") && ($("#ordersPhone").textContent = "+91 " + u.phone);
     if (box) box.innerHTML = mine.length ? mine.map(o => `
