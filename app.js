@@ -19,7 +19,7 @@ function renderHome(){const c=$("#homeCats");if(c)c.innerHTML=order.map(k=>`<a c
 function emoji(p){if(!p)return"🍽️";if(/biryani|rice|khichuri|pulao/i.test(p.name))return"🍚";if(/noodle|manchurian|chilli|fried rice/i.test(p.name))return"🍜";if(/fish|katla|rui|prawn/i.test(p.name))return"🐟";if(/paneer|veg|dal|aloo|mushroom|broccoli|rajma|roti|naan|paratha/i.test(p.name))return"🥘";return"🍗"}
 function renderMenu(){const mount=$("#menuMount");if(!mount)return;const q=($("#search")?.value||"").trim().toLowerCase(),groups=activeCategory==="all"?order:[activeCategory];let html="",seen=0;groups.forEach(k=>{let list=products.filter(p=>p.category===k&&(!q||p.name.toLowerCase().includes(q)));if(!list.length)return;seen+=list.length;html+=`<section class="menu-section" id="cat-${k}"><h2>${categories[k][0]} ${categories[k][1]} <span>${list.length} dishes</span></h2><div class="menu-grid">${list.map(p=>`<article class="menu-item"><div class="item-info"><i class="food-dot ${p.veg?"":"nonveg"}"></i><div><div class="item-name">${esc(p.name)}</div><div class="item-price">${money(p.price)}</div></div></div>${cart[p.id]?stepper(p.id):`<button class="add-button" data-add="${p.id}">+ Add</button>`}</article>`).join("")}</div></section>`});mount.innerHTML=html;if($("#emptyState"))$("#emptyState").hidden=seen!==0}
 function renderTabs(){let e=$("#cats");if(!e)return;e.innerHTML=`<button class="category-tab ${activeCategory==="all"?"active":""}" data-cat="all">All</button>`+order.map(k=>`<button class="category-tab ${activeCategory===k?"active":""}" data-cat="${k}">${categories[k][0]} ${categories[k][1]}</button>`).join("")}
-function renderCartPage(){let box=$("#cartPageItems");if(!box)return;let ids=Object.keys(cart).map(Number);box.innerHTML=ids.length?ids.map(id=>{let p=products.find(x=>x.id===id);return p?`<div class="cart-page-line"><div><b>${esc(p.name)}</b><small>${money(p.price)} each</small></div><div><strong>${money(p.price*(cart[id]||0))}</strong>${stepper(id)}<button class="remove" data-remove="${id}">Remove</button></div></div>`:""}).join(""):`<div class="cart-empty"><div>🛒</div><h2>Your cart is empty</h2><p>Add some dishes first.</p><a class="btn primary" href="/menu.html">Browse menu →</a></div>`;if($("#cartPageTotal"))$("#cartPageTotal").textContent=money(total());if($("#checkoutBtn")){ const b=$("#checkoutBtn"); b.classList.toggle("disabled",!ids.length); b.onclick=(e)=>{ if(!ids.length){e.preventDefault();return;} if(!getCurrentUser()){e.preventDefault();sessionStorage.setItem("savor_auth_next","/checkout.html");location.href="/signup.html?next="+encodeURIComponent("/checkout.html");} }; }}
+function renderCartPage(){let box=$("#cartPageItems");if(!box)return;let ids=Object.keys(cart).map(Number);box.innerHTML=ids.length?ids.map(id=>{let p=products.find(x=>x.id===id);return p?`<div class="cart-page-line"><div><b>${esc(p.name)}</b><small>${money(p.price)} each</small></div><div><strong>${money(p.price*(cart[id]||0))}</strong>${stepper(id)}<button class="remove" data-remove="${id}">Remove</button></div></div>`:""}).join(""):`<div class="cart-empty"><div>🛒</div><h2>Your cart is empty</h2><p>Add some dishes first.</p><a class="btn primary" href="/menu.html">Browse menu →</a></div>`;if($("#cartPageTotal"))$("#cartPageTotal").textContent=money(total());if($("#checkoutBtn")){ const b=$("#checkoutBtn"); b.classList.toggle("disabled",!ids.length); b.onclick=(e)=>{ if(!ids.length){e.preventDefault();return;} if(!getCurrentUser()){e.preventDefault();location.href="/login.html?next="+encodeURIComponent("/cart.html");} }; }}
 function renderCheckout(){let box=$("#checkoutItems");if(!box)return;let ids=Object.keys(cart).map(Number);if(!ids.length){box.innerHTML=`<div class="checkout-empty">Your cart is empty.<br><a href="/menu.html">Browse menu →</a></div>`;$("#checkoutTotal").textContent="₹0";$("#checkoutForm")?.querySelector("button[type=submit]")?.setAttribute("disabled","");return}box.innerHTML=ids.map(id=>{let p=products.find(x=>x.id===id);return p?`<div class="summary-line"><span>${esc(p.name)} <b>× ${cart[id]}</b></span><strong>${money(p.price*cart[id])}</strong></div>`:""}).join("");$("#checkoutTotal").textContent=money(total())}
 function renderAll(){renderNav();renderHome();renderTabs();renderMenu();renderCartPage();renderCheckout()}
 function status(){let m=new Date().getHours()*60+new Date().getMinutes(),o=m>=660&&m<1380;if($("#statusText"))$("#statusText").textContent=o?"Open now":"Closed · Opens 11 AM";if($("#statusDot"))$("#statusDot").classList.toggle("closed",!o)}
@@ -49,12 +49,12 @@ function showWhatsAppConfirmation(){
     document.body.appendChild(modal);
     $("#whatsappCancel",modal)?.addEventListener("click",()=>modal.remove());
     $("#whatsappSent",modal)?.addEventListener("click",()=>{
-      const pending=readJSON("savor_cafe_pending_order",null);
+      const pending=readJSON("savor_cafe_pending_order_v2",readJSON("savor_cafe_pending_order",null));
       if(!pending){toast("No pending order found");modal.remove();return}
       const fd=new FormData();Object.entries(pending.form||{}).forEach(([k,v])=>fd.append(k,v));
       currentMode=pending.mode||"delivery";cart=pending.cart||{};const saved=recordLocalOrder(fd,pending.details);if(!saved){return;}
       localStorage.setItem("savor_cafe_last_order",JSON.stringify(pending.details));
-      localStorage.removeItem("savor_cafe_pending_order");
+      localStorage.removeItem("savor_cafe_pending_order_v2"); localStorage.removeItem("savor_cafe_pending_order");
       cart={};save();modal.remove();location.href="/orders.html";
     });
   }
@@ -137,9 +137,7 @@ document.addEventListener("DOMContentLoaded",wrappedSetup,{once:true});
 /* =========================================================
    STATIC CUSTOMER AUTH + LOCAL ORDER BOOK
 ========================================================= */
-const AUTH_USERS_KEY = "savor_auth_users_v1";
-const AUTH_CURRENT_KEY = "savor_auth_current_v1";
-const AUTH_ORDERS_KEY = "savor_orders_v1";
+const APP_DATA_KEY = "savor_app_data_v2";
 const ADMIN_SESSION_KEY = "savor_admin_session_v1";
 
 function readJSON(key, fallback) {
@@ -148,26 +146,35 @@ function readJSON(key, fallback) {
 }
 function writeJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
 function normalizePhone(v) { return String(v || "").replace(/\D/g, "").slice(-10); }
-function getUsers() { return readJSON(AUTH_USERS_KEY, []); }
-function getOrders() { return readJSON(AUTH_ORDERS_KEY, []); }
-function migrateLegacyOrders() {
-  const legacy = readJSON("savor_cafe_orders_v1", []);
-  const current = getOrders();
-  if (!legacy.length) return;
-  const merged = [...current];
-  const seen = new Set(merged.map(o => String(o.orderNumber || o.id || "")));
-  legacy.forEach(o => {
-    const key = String(o.orderNumber || o.id || "");
-    if (!key || !seen.has(key)) { merged.push(o); seen.add(key); }
+function getAppData() {
+  const d = readJSON(APP_DATA_KEY, null);
+  if (d && typeof d === "object" && Array.isArray(d.users) && Array.isArray(d.orders)) return d;
+  const legacyUsers = readJSON("savor_auth_users_v1", []);
+  const legacyCurrent = readJSON("savor_auth_current_v1", null);
+  const legacyOrdersA = readJSON("savor_orders_v1", []);
+  const legacyOrdersB = readJSON("savor_cafe_orders_v1", []);
+  const orders = [];
+  const seen = new Set();
+  [...legacyOrdersA, ...legacyOrdersB].forEach(o => {
+    const key = String(o?.orderNumber || o?.id || "");
+    if (key && !seen.has(key)) { seen.add(key); orders.push(o); }
   });
-  writeJSON(AUTH_ORDERS_KEY, merged);
+  const data = {version:2, users:Array.isArray(legacyUsers)?legacyUsers:[], currentUser:legacyCurrent || null, orders};
+  writeJSON(APP_DATA_KEY, data);
+  return data;
 }
+function saveAppData(data) { writeJSON(APP_DATA_KEY, data); }
+function getUsers() { return getAppData().users; }
+function getOrders() { return getAppData().orders; }
+function migrateLegacyOrders() { getAppData(); }
 migrateLegacyOrders();
-function getCurrentUser() { return readJSON(AUTH_CURRENT_KEY, null); }
-function setCurrentUser(user) { user ? writeJSON(AUTH_CURRENT_KEY, user) : localStorage.removeItem(AUTH_CURRENT_KEY); }
-function customerOrSignup() {
+function getCurrentUser() { return getAppData().currentUser; }
+function setCurrentUser(user) { const d=getAppData(); d.currentUser=user||null; saveAppData(d); }
+function saveUsers(users) { const d=getAppData(); d.users=users; saveAppData(d); }
+function saveOrders(orders) { const d=getAppData(); d.orders=orders; saveAppData(d); }
+function customerOrSignup(next=location.pathname + location.search) {
   if (!getCurrentUser()) {
-    location.href = "/signup.html?next=" + encodeURIComponent(location.pathname + location.search);
+    location.href = "/login.html?next=" + encodeURIComponent(next);
     return false;
   }
   return true;
@@ -224,7 +231,7 @@ function recordLocalOrder(fd, orderDetails) {
     status: "Placed"
   };
   orders.push(order);
-  writeJSON(AUTH_ORDERS_KEY, orders);
+  saveOrders(orders);
   return true;
 }
 function renderCustomerHeader() {
@@ -242,7 +249,7 @@ function staticAuthSetup() {
   renderCustomerHeader();
 
   if (path === "checkout.html" && !user) {
-    location.replace("/signup.html?next=" + encodeURIComponent("/checkout.html"));
+    location.replace("/login.html?next=" + encodeURIComponent("/checkout.html"));
     return;
   }
 
@@ -251,6 +258,44 @@ function staticAuthSetup() {
     const phone = $("#checkoutForm [name=phone]");
     if (name) { name.value = user.name; name.readOnly = true; }
     if (phone) { phone.value = user.phone; phone.readOnly = true; }
+  }
+
+  if (path === "checkout.html" && user) {
+    const modeButtons = $$("#orderMode [data-mode]");
+    modeButtons.forEach(btn => btn.addEventListener("click", () => {
+      currentMode = btn.dataset.mode || "delivery";
+      modeButtons.forEach(b => b.classList.toggle("active", b === btn));
+      const addressWrap = $("#addressWrap");
+      const address = $("#checkoutForm [name=address]");
+      if (addressWrap) addressWrap.hidden = currentMode !== "delivery";
+      if (address) address.required = currentMode === "delivery";
+    }));
+    const form = $("#checkoutForm");
+    form?.addEventListener("submit", e => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const name = String(fd.get("name") || "").trim();
+      const phone = normalizePhone(fd.get("phone"));
+      const address = String(fd.get("address") || "").trim();
+      if (name.length < 2) { toast("Please enter your full name"); return; }
+      if (phone.length !== 10) { toast("Please enter a valid 10-digit mobile number"); return; }
+      if (currentMode === "delivery" && !address) { toast("Manual delivery address is compulsory"); return; }
+      if (!Object.keys(cart).length) { toast("Your cart is empty"); return; }
+      const details = generateOrderDetails();
+      const formObject = {}; fd.forEach((v,k) => formObject[k] = String(v));
+      const pending = {details, form:formObject, mode:currentMode, cart:{...cart}, userId:user.id};
+      writeJSON("savor_cafe_pending_order_v2", pending);
+      // Keep a compatibility copy for the confirmation handler.
+      writeJSON("savor_cafe_pending_order", pending);
+      const url = checkoutUrl(fd, details);
+      window.location.href = url;
+    });
+    const showPendingIfNeeded = () => {
+      const pending = readJSON("savor_cafe_pending_order_v2", null);
+      if (pending && pending.userId === user.id && !$("#whatsappConfirm")) showWhatsAppConfirmation();
+    };
+    showPendingIfNeeded();
+    window.addEventListener("pageshow", showPendingIfNeeded);
   }
 
   if (path === "signup.html") {
@@ -262,10 +307,10 @@ function staticAuthSetup() {
       if (name.length < 2) { msg.textContent = "Please enter your full name."; return; }
       if (phone.length !== 10) { msg.textContent = "Please enter a valid 10-digit mobile number."; return; }
       const users = getUsers();
-      if (users.some(u => normalizePhone(u.phone) === phone)) { msg.textContent = "This mobile number already exists. Please login."; return; }
+      if (users.some(u => normalizePhone(u.phone) === phone)) { location.href = "/login.html?next=" + encodeURIComponent(new URLSearchParams(location.search).get("next") || "/cart.html"); return; }
       const newUser = {id:"U" + Date.now(), name, phone, createdAt:new Date().toISOString()};
-      users.push(newUser); writeJSON(AUTH_USERS_KEY, users); setCurrentUser(newUser);
-      const next = new URLSearchParams(location.search).get("next") || "/profile.html";
+      users.push(newUser); saveUsers(users); setCurrentUser(newUser);
+      const next = new URLSearchParams(location.search).get("next") || "/cart.html";
       location.href = next;
     });
   }
@@ -275,10 +320,10 @@ function staticAuthSetup() {
     form?.addEventListener("submit", e => {
       e.preventDefault();
       const phone = normalizePhone(form.phone.value);
-      const found = getUsers().find(u => u.phone === phone);
+      const found = getUsers().find(u => normalizePhone(u.phone) === phone);
       if (!found) { msg.textContent = "Mobile number not found. Please sign up first."; return; }
       setCurrentUser(found);
-      const next = new URLSearchParams(location.search).get("next") || "/profile.html";
+      const next = new URLSearchParams(location.search).get("next") || "/cart.html";
       location.href = next;
     });
   }
@@ -328,7 +373,7 @@ function staticAuthSetup() {
     $("#adminLogout")?.addEventListener("click",()=>{localStorage.removeItem(ADMIN_SESSION_KEY);location.reload();});
     $("#exportUsers")?.addEventListener("click",()=>downloadExcel("auth.xls",getUsers(),["id","name","phone","createdAt"]));
     $("#exportOrders")?.addEventListener("click",()=>downloadExcel("orders.xls",getOrders(),["orderNumber","orderDate","orderTime","name","phone","type","address","total","status"]));
-    document.addEventListener("change", e=>{ const s=e.target.closest("[data-order-status]"); if(!s)return; const orders=getOrders(); const o=orders.find(x=>x.orderNumber===s.dataset.orderStatus); if(o){o.status=s.value;writeJSON(AUTH_ORDERS_KEY,orders);} });
+    document.addEventListener("change", e=>{ const s=e.target.closest("[data-order-status]"); if(!s)return; const orders=getOrders(); const o=orders.find(x=>x.orderNumber===s.dataset.orderStatus); if(o){o.status=s.value;saveOrders(orders);} });
     renderAdmin();
   }
 }
