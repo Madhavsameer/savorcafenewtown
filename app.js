@@ -39,8 +39,29 @@ function checkoutUrl(fd,details){
   if(currentMode==="delivery"){text+=`*Manual Address:* ${fd.get("address")}\n`;if(fd.get("gpsLocation"))text+=`*GPS Location:* ${fd.get("gpsLocation")}\n`;}
   text+=`\n*Items:*\n${items}\n\n*Total:* ${money(total())}`;
   if(fd.get("notes"))text+=`\n*Notes:* ${fd.get("notes")}`;
-  return`https://wa.me/918981315889?text=${encodeURIComponent(text)}`
+  return`https://wa.me/919431025101?text=${encodeURIComponent(text)}`
 }
+function showWhatsAppConfirmation(){
+  let modal=$("#whatsappConfirm");
+  if(!modal){
+    modal=document.createElement("div");
+    modal.id="whatsappConfirm";
+    modal.className="whatsapp-confirm-overlay";
+    modal.innerHTML=`<div class="whatsapp-confirm-card"><div class="auth-avatar">✓</div><h2>WhatsApp opened</h2><p>Send the order message to Savor Cafe' on WhatsApp, then come back here.</p><div class="whatsapp-confirm-actions"><button type="button" class="btn ghost" id="whatsappCancel">Cancel</button><button type="button" class="btn primary" id="whatsappSent">I’ve sent the order ✓</button></div></div>`;
+    document.body.appendChild(modal);
+    $("#whatsappCancel",modal)?.addEventListener("click",()=>modal.remove());
+    $("#whatsappSent",modal)?.addEventListener("click",()=>{
+      const pending=readJSON("savor_cafe_pending_order",null);
+      if(!pending){toast("No pending order found");modal.remove();return}
+      const fd=new FormData();Object.entries(pending.form||{}).forEach(([k,v])=>fd.append(k,v));
+      currentMode=pending.mode||"delivery";cart=pending.cart||{};recordLocalOrder(fd,pending.details);
+      localStorage.setItem("savor_cafe_last_order",JSON.stringify(pending.details));
+      localStorage.removeItem("savor_cafe_pending_order");
+      cart={};save();modal.remove();location.href="/orders.html";
+    });
+  }
+}
+
 function themeInit(){let saved=localStorage.getItem("savor_theme")||"dark";document.documentElement.dataset.theme=saved;let b=$("#themeToggle");if(b){b.textContent=saved==="dark"?"☀️":"🌙";b.title=saved==="dark"?"Switch to light mode":"Switch to dark mode";b.setAttribute("aria-label",b.title)}}
 function setup(){themeInit();const toggle=$("#navToggle"),links=$("#navLinks"),scrim=$("#navScrim");function close(){links?.classList.remove("open");scrim?.classList.remove("show");toggle?.setAttribute("aria-expanded","false");if(toggle)toggle.textContent="☰";document.body.classList.remove("nav-lock")}function open(){links?.classList.add("open");scrim?.classList.add("show");toggle?.setAttribute("aria-expanded","true");if(toggle)toggle.textContent="✕";document.body.classList.add("nav-lock")}toggle?.addEventListener("click",()=>links?.classList.contains("open")?close():open());scrim?.addEventListener("click",close);links?.querySelectorAll("a").forEach(a=>a.addEventListener("click",close));
 let page=location.pathname.split("/").pop().replace(".html","")||"index";page=page==="index"?"home":page;$$('.nav-links a').forEach(a=>a.classList.toggle('active',a.dataset.page===page));if($("#statusText"))status();setInterval(status,60000);const params=new URLSearchParams(location.search);if(params.get("category"))activeCategory=params.get("category");renderAll();
@@ -62,7 +83,7 @@ $("#gpsBtn")?.addEventListener("click",()=>{
     if(msg)msg.textContent=`Live location captured: ${lat}, ${lng}. Manual address is still required.`;
   },err=>{if(msg)msg.textContent=err.code===1?"Location permission denied. Please allow location access.":"Could not get live location. Please try again."},{enableHighAccuracy:true,timeout:12000,maximumAge:0});
 });
-$("#checkoutForm")?.addEventListener("submit",e=>{e.preventDefault();if(!count())return toast("Your cart is empty");const form=e.currentTarget;const address=form.querySelector("[name=address]");if(currentMode==="delivery" && address && !address.value.trim()){address.setCustomValidity("Please enter your complete manual delivery address.");address.reportValidity();address.focus();return}if(address)address.setCustomValidity("");if(!getCurrentUser()){location.href="/signup.html?next="+encodeURIComponent("/checkout.html");return}const fd=new FormData(form);const details=generateOrderDetails();recordLocalOrder(fd,details);localStorage.setItem("savor_cafe_last_order",JSON.stringify(details));const whatsappUrl=checkoutUrl(fd,details);cart={};save();window.location.href=whatsappUrl});
+$("#checkoutForm")?.addEventListener("submit",e=>{e.preventDefault();if(!count())return toast("Your cart is empty");const form=e.currentTarget;const address=form.querySelector("[name=address]");if(currentMode==="delivery" && address && !address.value.trim()){address.setCustomValidity("Please enter your complete manual delivery address.");address.reportValidity();address.focus();return}if(address)address.setCustomValidity("");if(!getCurrentUser()){location.href="/signup.html?next="+encodeURIComponent("/checkout.html");return}const fd=new FormData(form);const details=generateOrderDetails();const whatsappUrl=checkoutUrl(fd,details);localStorage.setItem("savor_cafe_pending_order",JSON.stringify({details,form:Object.fromEntries(fd.entries()),mode:currentMode,cart,createdAt:new Date().toISOString()}));window.open(whatsappUrl,"_blank","noopener");showWhatsAppConfirmation();});
 $("#contactForm")?.addEventListener("submit",e=>{e.preventDefault();let f=new FormData(e.currentTarget);window.open(`https://wa.me/918981315889?text=${encodeURIComponent(`Hello Savor Cafe'!\n\nName: ${f.get("name")}\nPhone: ${f.get("phone")||"Not provided"}\nMessage: ${f.get("message")}`)}`,"_blank")});
 const pl=$("#preloader");if(pl){if(sessionStorage.getItem("savor_intro_seen")){pl.classList.add("hide")}else{sessionStorage.setItem("savor_intro_seen","1");setTimeout(()=>pl.classList.add("hide"),1900)}}
 }
