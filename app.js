@@ -7,6 +7,15 @@
      - Cart remains separate because it is temporary shopping state
      - Order is saved BEFORE WhatsApp is opened
      - Delivery / Takeaway / Dine-in are explicit modes
+
+     FIX APPLIED: page-detection was matching on the URL literally
+     ending in "checkout.html" / "orders.html" etc. If the site is
+     hosted with clean URLs (no .html in the address bar) or a
+     trailing slash, those checks silently failed, so the checkout
+     submit handler and the orders-page renderer never ran at all.
+     That's why orders weren't saving AND WhatsApp wasn't opening —
+     same root cause. Replaced with getPageName(), which normalizes
+     the path before comparing.
   ========================================================= */
 
   const APP_DATA_KEY = "savor_app_data_v3";
@@ -18,6 +27,17 @@
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
+
+  // ---- FIX: robust page-name detection -----------------------------------
+  // Works whether the URL is /checkout.html, /checkout, or /checkout/
+  function getPageName() {
+    let path = location.pathname;
+    if (path.length > 1 && path.endsWith("/")) path = path.slice(0, -1);
+    let page = path.split("/").pop() || "index.html";
+    if (!page.includes(".")) page += ".html";
+    return page.toLowerCase();
+  }
+  // --------------------------------------------------------------------------
 
   const products = (window.MENU_PRODUCTS || []).map(product => ({
     ...product,
@@ -368,7 +388,8 @@
     document.addEventListener("keydown", event => { if (event.key === "Escape") close(); });
     window.addEventListener("pageshow", close);
 
-    let page = location.pathname.split("/").pop()?.replace(".html", "") || "index";
+    // ---- FIX: use getPageName() instead of raw pathname parsing ----
+    let page = getPageName().replace(".html", "");
     if (page === "index") page = "home";
     $$(".nav-links a[data-page]").forEach(link => link.classList.toggle("active", link.dataset.page === page));
   }
@@ -595,7 +616,8 @@
   }
 
   function initCheckout() {
-    if (location.pathname.split("/").pop() !== "checkout.html") return;
+    // ---- FIX: use getPageName() instead of raw pathname parsing ----
+    if (getPageName() !== "checkout.html") return;
     const user = getCurrentUser();
     if (!user) {
       location.replace(`/login.html?next=${encodeURIComponent("/checkout.html")}`);
@@ -660,7 +682,8 @@
   }
 
   function initAuth() {
-    const page = location.pathname.split("/").pop() || "index.html";
+    // ---- FIX: use getPageName() instead of raw pathname parsing ----
+    const page = getPageName();
 
     if (page === "signup.html") {
       const form = $("#signupForm");
