@@ -52,7 +52,7 @@ function showWhatsAppConfirmation(){
       const pending=readJSON("savor_cafe_pending_order",null);
       if(!pending){toast("No pending order found");modal.remove();return}
       const fd=new FormData();Object.entries(pending.form||{}).forEach(([k,v])=>fd.append(k,v));
-      currentMode=pending.mode||"delivery";cart=pending.cart||{}; if (!recordLocalOrder(fd,pending.details)) { toast("Please sign in again before confirming the order"); return; }
+      currentMode=pending.mode||"delivery";cart=pending.cart||{};const saved=recordLocalOrder(fd,pending.details);if(!saved){return;}
       localStorage.setItem("savor_cafe_last_order",JSON.stringify(pending.details));
       localStorage.removeItem("savor_cafe_pending_order");
       cart={};save();modal.remove();location.href="/orders.html";
@@ -61,32 +61,57 @@ function showWhatsAppConfirmation(){
 }
 
 function themeInit(){let saved=localStorage.getItem("savor_theme")||"dark";document.documentElement.dataset.theme=saved;let b=$("#themeToggle");if(b){b.textContent=saved==="dark"?"☀️":"🌙";b.title=saved==="dark"?"Switch to light mode":"Switch to dark mode";b.setAttribute("aria-label",b.title)}}
-function setup(){themeInit();const toggle=$("#navToggle"),links=$("#navLinks"),scrim=$("#navScrim");function close(){links?.classList.remove("open");scrim?.classList.remove("show");toggle?.setAttribute("aria-expanded","false");if(toggle)toggle.textContent="☰";document.body.classList.remove("nav-lock")}function open(){links?.classList.add("open");scrim?.classList.add("show");toggle?.setAttribute("aria-expanded","true");if(toggle)toggle.textContent="✕";document.body.classList.add("nav-lock")}toggle?.addEventListener("click",()=>links?.classList.contains("open")?close():open());scrim?.addEventListener("click",close);links?.querySelectorAll("a").forEach(a=>a.addEventListener("click",close));
-let page=location.pathname.split("/").pop().replace(".html","")||"index";page=page==="index"?"home":page;$$('.nav-links a').forEach(a=>a.classList.toggle('active',a.dataset.page===page));if($("#statusText"))status();setInterval(status,60000);const params=new URLSearchParams(location.search);if(params.get("category"))activeCategory=params.get("category");renderAll();
-$("#themeToggle")?.addEventListener("click",()=>{let next=document.documentElement.dataset.theme==="dark"?"light":"dark";document.documentElement.dataset.theme=next;localStorage.setItem("savor_theme",next);let b=$("#themeToggle");b.textContent=next==="dark"?"☀️":"🌙";b.title=next==="dark"?"Switch to light mode":"Switch to dark mode";b.setAttribute("aria-label",b.title)});
-document.addEventListener("click",e=>{let a=e.target.closest("[data-add]"),pl=e.target.closest("[data-plus]"),mi=e.target.closest("[data-minus]"),rm=e.target.closest("[data-remove]"),cat=e.target.closest("[data-cat]");if(a)add(+a.dataset.add);else if(pl)change(+pl.dataset.plus,1);else if(mi)change(+mi.dataset.minus,-1);else if(rm){delete cart[rm.dataset.remove];save();renderAll()}else if(cat){activeCategory=cat.dataset.cat;renderTabs();renderMenu()}});
-$("#search")?.addEventListener("input",()=>{if($("#searchClear"))$("#searchClear").classList.toggle("show",!!$("#search").value);renderMenu()});$("#searchClear")?.addEventListener("click",()=>{$("#search").value="";$("#searchClear").classList.remove("show");renderMenu()});
-$$("#orderMode button").forEach(b=>b.addEventListener("click",()=>{$$("#orderMode button").forEach(x=>x.classList.remove("active"));b.classList.add("active");currentMode=b.dataset.mode;if($("#addressWrap"))$("#addressWrap").style.display=""}));
-$("#manualAddressBtn")?.addEventListener("click",()=>{const a=$("textarea[name=address]");$("#manualAddressBtn")?.classList.add("active");$("#gpsBtn")?.classList.remove("active");a?.focus();if($("#gpsMsg"))$("#gpsMsg").textContent="Please enter your complete manual address below."});
-$("#gpsBtn")?.addEventListener("click",()=>{
-  const msg=$("#gpsMsg");
-  if(!navigator.geolocation){if(msg)msg.textContent="Live location is not supported by this browser.";return}
-  $("#gpsBtn")?.classList.add("active");$("#manualAddressBtn")?.classList.remove("active");
-  if(msg)msg.textContent="Getting your live location…";
-  navigator.geolocation.getCurrentPosition(p=>{
-    const lat=p.coords.latitude.toFixed(6),lng=p.coords.longitude.toFixed(6);
-    const map=`https://www.google.com/maps?q=${lat},${lng}`;
-    const gps=$("#gpsLocation");
-    if(gps){gps.value=map;gps.hidden=false}
-    if(msg)msg.textContent=`Live location captured: ${lat}, ${lng}. Manual address is still required.`;
-  },err=>{if(msg)msg.textContent=err.code===1?"Location permission denied. Please allow location access.":"Could not get live location. Please try again."},{enableHighAccuracy:true,timeout:12000,maximumAge:0});
-});
-$("#checkoutForm")?.addEventListener("submit",e=>{e.preventDefault();if(!count())return toast("Your cart is empty");const form=e.currentTarget;const address=form.querySelector("[name=address]");if(currentMode==="delivery" && address && !address.value.trim()){address.setCustomValidity("Please enter your complete manual delivery address.");address.reportValidity();address.focus();return}if(address)address.setCustomValidity("");if(!getCurrentUser()){location.href="/signup.html?next="+encodeURIComponent("/checkout.html");return}const fd=new FormData(form);const details=generateOrderDetails();const whatsappUrl=checkoutUrl(fd,details);localStorage.setItem("savor_cafe_pending_order",JSON.stringify({details,form:Object.fromEntries(fd.entries()),mode:currentMode,cart,createdAt:new Date().toISOString()}));window.open(whatsappUrl,"_blank","noopener");showWhatsAppConfirmation();});
-$("#contactForm")?.addEventListener("submit",e=>{e.preventDefault();let f=new FormData(e.currentTarget);window.open(`https://wa.me/919431025101?text=${encodeURIComponent(`Hello Savor Cafe'!\n\nName: ${f.get("name")}\nPhone: ${f.get("phone")||"Not provided"}\nMessage: ${f.get("message")}`)}`,"_blank")});
-const pl=$("#preloader");if(pl){if(sessionStorage.getItem("savor_intro_seen")){pl.classList.add("hide")}else{sessionStorage.setItem("savor_intro_seen","1");setTimeout(()=>pl.classList.add("hide"),1900)}}
+function setup(){
+  themeInit();
+  const toggle=$("#navToggle"), links=$("#navLinks"), scrim=$("#navScrim");
+  const close=()=>{
+    links?.classList.remove("open");
+    scrim?.classList.remove("show");
+    toggle?.setAttribute("aria-expanded","false");
+    if(toggle) toggle.textContent="☰";
+    document.body.classList.remove("nav-lock");
+  };
+  const open=()=>{
+    links?.classList.add("open");
+    scrim?.classList.add("show");
+    toggle?.setAttribute("aria-expanded","true");
+    if(toggle) toggle.textContent="✕";
+    document.body.classList.add("nav-lock");
+  };
+  toggle?.addEventListener("click",e=>{e.preventDefault();e.stopPropagation();links?.classList.contains("open")?close():open();});
+  scrim?.addEventListener("click",close);
+  links?.addEventListener("click",e=>{
+    const a=e.target.closest("a");
+    if(!a) return;
+    close();
+    // Do not prevent default: normal browser navigation is intentional.
+  });
+  let page=location.pathname.split("/").pop().replace(".html","")||"index";
+  page=page==="index"?"home":page;
+  $$(".nav-links a").forEach(a=>a.classList.toggle("active",a.dataset.page===page));
+  if($("#statusText")) status();
+  setInterval(status,60000);
+  const params=new URLSearchParams(location.search);
+  if(params.get("category")) activeCategory=params.get("category");
+  renderAll();
+  $("#themeToggle")?.addEventListener("click",()=>{
+    let next=document.documentElement.dataset.theme==="dark"?"light":"dark";
+    document.documentElement.dataset.theme=next;
+    localStorage.setItem("savor_theme",next);
+    let b=$("#themeToggle");
+    if(b){b.textContent=next==="dark"?"☀️":"🌙";b.title=next==="dark"?"Switch to light mode":"Switch to dark mode";b.setAttribute("aria-label",b.title)}
+  });
+  document.addEventListener("click",e=>{
+    let a=e.target.closest("[data-add]"),pl=e.target.closest("[data-plus]"),mi=e.target.closest("[data-minus]"),rm=e.target.closest("[data-remove]"),cat=e.target.closest("[data-cat]");
+    if(a)add(+a.dataset.add); else if(pl)change(+pl.dataset.plus,1); else if(mi)change(+mi.dataset.minus,-1); else if(rm){delete cart[rm.dataset.remove];save();renderAll()} else if(cat){activeCategory=cat.dataset.cat;renderTabs();renderMenu()}
+  });
+  $("#search")?.addEventListener("input",renderMenu);
+  $("#clearSearch")?.addEventListener("click",()=>{$("#search").value="";renderMenu()});
+  $("#clearCart")?.addEventListener("click",()=>{cart={};save();renderAll()});
+  document.addEventListener("keydown",e=>{if(e.key==="Escape")close()});
+  window.addEventListener("pageshow",close);
 }
-function initGallery(){const slides=$$(".gallery-slide"),dots=$("#galleryDots");if(!slides.length)return;let i=0,t;slides.forEach((_,n)=>{if(dots){let b=document.createElement("button");b.type="button";b.setAttribute("aria-label",`Photo ${n+1}`);b.addEventListener("click",()=>go(n));dots.appendChild(b)}});function go(n){i=(n+slides.length)%slides.length;slides.forEach((x,k)=>x.classList.toggle("active",k===i));$$("#galleryDots button").forEach((b,k)=>b.classList.toggle("active",k===i))}$("#galleryPrev")?.addEventListener("click",()=>go(i-1));$("#galleryNext")?.addEventListener("click",()=>go(i+1));go(0);t=setInterval(()=>go(i+1),4200);$("#gallerySlider")?.addEventListener("mouseenter",()=>clearInterval(t));$("#gallerySlider")?.addEventListener("mouseleave",()=>t=setInterval(()=>go(i+1),4200))}
-function initReviews(){const track=$("#reviewTrack");if(!track)return;const data=[{source:"Google snapshot",rating:"4.8",count:"46 ratings",text:"A strong public rating snapshot for Savor Cafe on the Google listing."},{source:"Zomato snapshot",rating:"4.3",count:"11 dining ratings",text:"Zomato currently shows a 4.3 dining rating for the New Town outlet."},{source:"Justdial snapshot",rating:"4.7",count:"49 ratings",text:"Justdial currently shows a 4.7 rating snapshot for the outlet."}];let i=0;track.innerHTML=data.map((r,k)=>`<article class="review-card ${k===0?"active":""}"><div class="review-stars">★★★★★</div><div class="review-rating">${r.rating}<small>/ 5</small></div><p>${r.text}</p><b>${r.source}</b><span>${r.count}</span></article>`).join("");const cards=$$(".review-card"),dots=$("#reviewDots");data.forEach((_,k)=>{let b=document.createElement("button");b.type="button";b.addEventListener("click",()=>go(k));dots?.appendChild(b)});function go(n){i=(n+data.length)%data.length;cards.forEach((c,k)=>c.classList.toggle("active",k===i));$$("#reviewDots button").forEach((b,k)=>b.classList.toggle("active",k===i))}go(0);setInterval(()=>go(i+1),4000)}
+
 const oldSetup=setup;const wrappedSetup=()=>{oldSetup();initGallery();initReviews()};document.removeEventListener("DOMContentLoaded",setup);document.addEventListener("DOMContentLoaded",wrappedSetup);
 
 /* =========================================================
@@ -104,23 +129,21 @@ function readJSON(key, fallback) {
 function writeJSON(key, value) { localStorage.setItem(key, JSON.stringify(value)); }
 function normalizePhone(v) { return String(v || "").replace(/\D/g, "").slice(-10); }
 function getUsers() { return readJSON(AUTH_USERS_KEY, []); }
-function getCurrentUser() { return readJSON(AUTH_CURRENT_KEY, null); }
-function userPhone(user) { return normalizePhone(user?.phone || user?.mobile || user?.whatsapp || user?.number || ""); }
-function orderPhone(order) { return normalizePhone(order?.phone || order?.mobile || order?.whatsapp || order?.customerPhone || ""); }
 function getOrders() { return readJSON(AUTH_ORDERS_KEY, []); }
 function migrateLegacyOrders() {
-  const legacy=readJSON("savor_cafe_orders_v1", []);
-  const current=getOrders();
+  const legacy = readJSON("savor_cafe_orders_v1", []);
+  const current = getOrders();
   if (!legacy.length) return;
-  const seen=new Set(current.map(o=>String(o.orderNumber || o.id || o.createdAt || "")));
-  const merged=[...current];
-  legacy.forEach(o=>{
-    const key=String(o.orderNumber || o.id || o.createdAt || "");
-    if (!seen.has(key)) { merged.push(o); seen.add(key); }
+  const merged = [...current];
+  const seen = new Set(merged.map(o => String(o.orderNumber || o.id || "")));
+  legacy.forEach(o => {
+    const key = String(o.orderNumber || o.id || "");
+    if (!key || !seen.has(key)) { merged.push(o); seen.add(key); }
   });
   writeJSON(AUTH_ORDERS_KEY, merged);
 }
 migrateLegacyOrders();
+function getCurrentUser() { return readJSON(AUTH_CURRENT_KEY, null); }
 function setCurrentUser(user) { user ? writeJSON(AUTH_CURRENT_KEY, user) : localStorage.removeItem(AUTH_CURRENT_KEY); }
 function customerOrSignup() {
   if (!getCurrentUser()) {
@@ -144,30 +167,46 @@ function downloadExcel(filename, rows, columns) {
 }
 
 function recordLocalOrder(fd, orderDetails) {
-  const u = getCurrentUser();
-  if (!u) return false;
+  const u = getCurrentUser() || {};
+  const formName = String(fd?.get("name") || "").trim();
+  const formPhone = normalizePhone(fd?.get("phone") || "");
+  const phone = formPhone || normalizePhone(u.phone);
+  const name = formName || String(u.name || "Customer").trim();
+  if (!phone) { toast("Customer mobile number is missing"); return false; }
   const mode = currentMode === "delivery" ? "Delivery" : currentMode === "takeaway" ? "Takeaway" : "Dine-in";
   const items = Object.entries(cart).map(([id, qty]) => {
     const p = products.find(x => x.id == id);
     return p ? {name:p.name, qty:Number(qty), amount:p.price * Number(qty)} : null;
   }).filter(Boolean);
+  if (!items.length) { toast("Your cart is empty"); return false; }
   const now = new Date();
-  const phone = userPhone(u) || normalizePhone(fd.get("phone"));
   const orders = getOrders();
+  const orderNumber = String(orderDetails?.orderNumber || generateOrderDetails().orderNumber);
+  const existing = orders.find(o => String(o.orderNumber) === orderNumber);
+  if (existing) return true;
   const order = {
-    id: "O" + Date.now(), userId: u.id || "", orderNumber: orderDetails.orderNumber,
-    orderDate: orderDetails.orderDate || orderDetails.date, orderTime: orderDetails.orderTime || orderDetails.time,
-    isoDate: now.toLocaleDateString("en-CA"), createdAt: now.toISOString(),
-    name: u.name || String(fd.get("name") || "Customer"), phone, type: mode,
-    address: currentMode === "delivery" ? String(fd.get("address") || "") : "",
-    gpsLocation: currentMode === "delivery" ? String(fd.get("gpsLocation") || "") : "",
-    notes: String(fd.get("notes") || ""), items, total: total(), status: "Placed"
+    id: "O" + Date.now(),
+    orderNumber,
+    userId: u.id || "",
+    orderDate: orderDetails?.orderDate || orderDetails?.date || now.toLocaleDateString("en-IN"),
+    orderTime: orderDetails?.orderTime || orderDetails?.time || now.toLocaleTimeString("en-IN"),
+    isoDate: now.toLocaleDateString("en-CA"),
+    createdAt: now.toISOString(),
+    name,
+    phone,
+    normalizedPhone: phone,
+    type: mode,
+    address: mode === "Delivery" ? String(fd?.get("address") || "") : "",
+    gpsLocation: mode === "Delivery" ? String(fd?.get("gpsLocation") || "") : "",
+    notes: String(fd?.get("notes") || ""),
+    items,
+    total: items.reduce((sum,i)=>sum + Number(i.amount||0),0),
+    status: "Placed"
   };
-  if (!orders.some(o => String(o.orderNumber) === String(order.orderNumber))) orders.push(order);
+  orders.push(order);
   writeJSON(AUTH_ORDERS_KEY, orders);
   return true;
 }
-
 function renderCustomerHeader() {
   const u = getCurrentUser();
   const link = $("#accountNav");
@@ -227,25 +266,19 @@ function staticAuthSetup() {
   if (path === "profile.html") {
     if (!customerOrSignup()) return;
     const u = getCurrentUser();
-    const phone = userPhone(u);
     $("#profileName") && ($("#profileName").textContent = u.name);
-    $("#profilePhone") && ($("#profilePhone").textContent = phone ? "+91 " + phone : "");
+    $("#profilePhone") && ($("#profilePhone").textContent = "+91 " + u.phone);
     $("#profileInitial") && ($("#profileInitial").textContent = u.name.charAt(0).toUpperCase());
-    $("#profileOrdersCount") && ($("#profileOrdersCount").textContent = getOrders().filter(o => (u.id && o.userId && String(o.userId) === String(u.id)) || (phone && phone === orderPhone(o))).length);
+    $("#profileOrdersCount") && ($("#profileOrdersCount").textContent = getOrders().filter(o => (o.userId && o.userId === u.id) || normalizePhone(o.normalizedPhone || o.phone) === normalizePhone(u.phone)).length);
     $("#logoutBtn")?.addEventListener("click", () => { setCurrentUser(null); location.href="/index.html"; });
   }
 
   if (path === "orders.html") {
     if (!customerOrSignup()) return;
     const u = getCurrentUser();
-    const phone = userPhone(u);
-    const mine = getOrders().filter(o => {
-      const sameUser = u.id && o.userId && String(o.userId) === String(u.id);
-      const samePhone = phone && orderPhone(o) && phone === orderPhone(o);
-      return sameUser || samePhone;
-    }).sort((a,b) => String(b.createdAt||"").localeCompare(String(a.createdAt||"")));
+    const mine = getOrders().filter(o => (o.userId && o.userId === u.id) || normalizePhone(o.normalizedPhone || o.phone) === normalizePhone(u.phone)).sort((a,b) => String(b.createdAt||"").localeCompare(String(a.createdAt||"")));
     const box = $("#ordersList");
-    if ($("#ordersPhone")) $("#ordersPhone").textContent = phone ? "+91 " + phone : (u.name || "your account");
+    $("#ordersPhone") && ($("#ordersPhone").textContent = "+91 " + u.phone);
     if (box) box.innerHTML = mine.length ? mine.map(o => `
       <article class="order-card">
         <div class="order-card-top"><div><span class="eyebrow">ORDER</span><h3>#${esc(o.orderNumber)}</h3></div><span class="order-status">${esc(o.status || "Placed")}</span></div>
