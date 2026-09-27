@@ -23,7 +23,7 @@
   const CART_KEY = "savor_cafe_cart_v3";
   const THEME_KEY = "savor_theme";
   const ADMIN_SESSION_KEY = "savor_admin_session_v2";
-  const WHATSAPP_NUMBER = "919431025101";
+  const WHATSAPP_NUMBER = "+918981315889"
 
   const $ = (selector, root = document) => root.querySelector(selector);
   const $$ = (selector, root = document) => [...root.querySelectorAll(selector)];
